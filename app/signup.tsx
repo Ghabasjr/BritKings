@@ -3,7 +3,7 @@ import GradientButton from '@/components/GradientButton/GradientButton';
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 const socialButtons = [
     { name: 'Google', icon: <AntDesign name="google" size={24} color="#000" />, text: 'Continue with Google' },
@@ -48,13 +48,8 @@ export default function SignupPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
-                {/* Logo Section */}
-                <Image
-                    source={{ uri: './assets/BritKings.png' }}
-                    style={styles.logo}
-                />
 
-                <View >
+                <View>
                     <Text style={styles.formTitle}>Create an Account</Text>
 
                     <CustomInput
@@ -76,13 +71,14 @@ export default function SignupPage() {
                         />
                     </View>
 
-                    <GradientButton title={'Continue'} onPress={() => router.push('/personalInformation')} />
+                    <GradientButton title={'Continue'} onPress={() => router.push('/verification')} />
                     <View style={styles.account}>
 
                         <Text style={styles.alreadyAccountText}>Already have an account?</Text>
-                        <TouchableOpacity onPress={() => router.push('/login')}> <Text>
-                            Log In
-                        </Text>
+                        <TouchableOpacity onPress={() => router.push('/login')}>
+                            <Text style={styles.login}>
+                                Log In
+                            </Text>
                         </TouchableOpacity>
 
                     </View>
@@ -117,7 +113,13 @@ export default function SignupPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        marginTop: 30
+        // marginTop: 30,
+        paddingTop: 80,
+        backgroundColor: '#F5F5F5',
+
+    },
+    login: {
+        color: 'black'
     },
     container: {
         flex: 1,
@@ -131,12 +133,13 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 20,
+        justifyContent: 'center',
+        paddingVertical: 20
     },
     account: {
         display: 'flex',
         flexDirection: 'row',
-        // alignItems: 'center',
+        alignItems: 'center',
         justifyContent: 'center',
         gap: 6
     },
@@ -148,6 +151,7 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         flex: 1,
+
         backgroundColor: '#fff',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
@@ -159,6 +163,9 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
         marginBottom: 20,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     input: {
         height: 50,
@@ -229,5 +236,6 @@ const styles = StyleSheet.create({
     biometricText: {
         fontSize: 16,
         color: '#333',
+
     },
 });

@@ -17,7 +17,7 @@ const FeaturedPropertyCard = ({ title, location, type, rating, price, image }) =
             <View style={featuredStyles.detailsRow}>
                 <Text style={featuredStyles.typeText}>{type}</Text>
                 <View style={featuredStyles.ratingContainer}>
-                    <Ionicons name="star" size={12} color="#ffa500" />
+                    <Ionicons name="star" size={12} color="#DD7800" />
                     <Text style={featuredStyles.ratingText}>{rating}</Text>
                 </View>
             </View>
@@ -114,7 +114,7 @@ const featuredStyles = StyleSheet.create({
     price: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#ffa500',
+        color: "#DD7800",
     }
 });
 
@@ -179,7 +179,7 @@ export default function RealEstateHomePage() {
             type: 'Apartment',
             rating: 4.5,
             price: '$18,000',
-            image: 'https://placehold.co/600x400/e0e0e0/555?text=Property+1'
+            image: '../assets/BritKings.png'
         },
         {
             title: 'Luxury Villa',
@@ -288,6 +288,9 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        paddingTop: 30
+
+
     },
     container: {
         flex: 1,

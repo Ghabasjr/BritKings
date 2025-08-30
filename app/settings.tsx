@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
@@ -7,14 +8,14 @@ const SettingItem = ({ title, message, icon, hasSwitch, onToggle }) => (
     <View style={settingItemStyles.card}>
         <View style={settingItemStyles.content}>
             <View style={settingItemStyles.iconContainer}>
-                <Ionicons name={icon} size={24} color="#ffa500" />
+                <Ionicons name={icon} size={24} color="#DD7800" />
             </View>
             <View style={settingItemStyles.textContainer}>
                 <Text style={settingItemStyles.title}>{title}</Text>
                 <Text style={settingItemStyles.message}>{message}</Text>
             </View>
         </View>
-        {hasSwitch && <Switch trackColor={{ false: "#ccc", true: "#ffa500" }} thumbColor={onToggle ? "#fff" : "#f4f3f4"} onValueChange={onToggle} value={onToggle} />}
+        {hasSwitch && <Switch trackColor={{ false: "#ccc", true: "#DD7800" }} thumbColor={onToggle ? "#fff" : "#f4f3f4"} onValueChange={onToggle} value={onToggle} />}
     </View>
 );
 
@@ -67,8 +68,8 @@ export default function SettingsPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color='#DD7800' />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Settings</Text>
                 <View style={{ width: 24 }} />
@@ -86,7 +87,7 @@ export default function SettingsPage() {
 
                 <TouchableOpacity style={styles.reEnrollButton} onPress={handleReEnrollBiometric}>
                     <Text style={styles.reEnrollText}>Re-enroll Biometric</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#ffa500" />
+                    <Ionicons name="chevron-forward" size={24} color="#DD7800" />
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
@@ -97,6 +98,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        paddingTop: 30
     },
     header: {
         flexDirection: 'row',
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
     },
     reEnrollText: {
         fontSize: 16,
-        color: '#ffa500',
+        color: "#DD7800",
         fontWeight: 'bold',
     },
 });

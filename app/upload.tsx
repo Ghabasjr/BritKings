@@ -45,7 +45,7 @@ export default function UploadPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
+                <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#ffa500" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Upload</Text>
@@ -94,7 +94,8 @@ export default function UploadPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#362f2f',
+        backgroundColor: '#ffffffff',
+        paddingHorizontal: 10
     },
     header: {
         flexDirection: 'row',
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#070606ff',
     },
     scrollContent: {
         padding: 16,

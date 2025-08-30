@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -28,7 +29,9 @@ export default function ArchivedStaffsScreen() {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Ionicons name="chevron-back" size={24} color="black" />
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Archived Staffs</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -65,7 +68,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingTop: 50,
+        paddingTop: 40,
     },
     header: {
         flexDirection: 'row',

@@ -75,7 +75,7 @@ export default function RootLayout() {
         <Stack.Screen name='Tasks' options={{ headerShown: false }} />
         <Stack.Screen name='newListing' options={{ headerShown: false }} />
         <Stack.Screen name='PropertyDetails' options={{ headerShown: false }} />
-        <Stack.Screen name='performanceScreen' options={{ headerShown: false }} />
+        <Stack.Screen name='PerformanceScreen' options={{ headerShown: false }} />
         <Stack.Screen name='AchievedStaff' options={{ headerShown: false }} />
         <Stack.Screen name='Transactions' options={{ headerShown: false }} />
         <Stack.Screen name='profileScreen' options={{ headerShown: false }} />

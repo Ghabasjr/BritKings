@@ -236,7 +236,7 @@ const ProfileScreen = () => {
 
         switch (item.title) {
             case 'Personal Information':
-                router.push('/ContactUs');
+                router.push('/PerformanceScreen');
                 break;
             case 'KYC Status':
                 router.push('/AchievedStaff');
@@ -262,6 +262,7 @@ const ProfileScreen = () => {
             case 'Logout':
                 // Implement your logout logic here
                 console.log('Logging out...');
+                router.push('/login')
                 break;
             default:
                 console.warn(`No navigation route defined for: ${item.title}`);
@@ -291,7 +292,7 @@ const ProfileScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#333" />
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Profile</Text>
                 <View style={styles.headerSpacer} />

@@ -1,11 +1,21 @@
+
+
 // SideModal.js
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SideModal = ({ isVisible, onClose }) => {
+    const router = useRouter();
+
     if (!isVisible) {
         return null;
     }
+
+    const handleNavigation = (destination) => {
+        onClose();
+        router.push(destination);
+    };
 
     return (
         <View style={styles.overlay}>
@@ -13,33 +23,45 @@ const SideModal = ({ isVisible, onClose }) => {
                 <TouchableOpacity style={styles.closeButton} onPress={onClose}>
                     <Text style={styles.closeButtonText}>X</Text>
                 </TouchableOpacity>
-                <View style={styles.menuItem}>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/Bookings')}>
                     <Text style={styles.menuText}>Bookings</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/RefundPolicy')}>
                     <Text style={styles.menuText}>Refund Policy</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/AchievedStaff')}>
                     <Text style={styles.menuText}>Archived Staffs</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/PerformanceScreen')}>
                     <Text style={styles.menuText}>Performance</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/ContactUs')}>
                     <Text style={styles.menuText}>Contact Us</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/ContactUs2')}>
+                    <Text style={styles.menuText}>Contact Us</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/Tasks')}>
                     <Text style={styles.menuText}>Task</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/plots')}>
                     <Text style={styles.menuText}>Property Map View</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/Biometric-Settings')}>
                     <Text style={styles.menuText}>Biometric Settings</Text>
-                </View>
-                <View style={styles.menuItem}>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/settings')}>
                     <Text style={styles.menuText}>Settings</Text>
-                </View>
+                </TouchableOpacity>
             </View>
         </View>
     );

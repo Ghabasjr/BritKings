@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -76,8 +77,8 @@ export default function TasksPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Task</Text>
                 <View style={{ width: 24 }} />
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        paddingTop: 30
     },
     header: {
         flexDirection: 'row',

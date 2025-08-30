@@ -31,7 +31,7 @@ export default function VerificationPage() {
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => console.log('Go back')}>
+                    <TouchableOpacity onPress={() => router.back()}>
                         <Ionicons name="chevron-back" size={24} color="#DD7800" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Verification</Text>
@@ -62,8 +62,8 @@ export default function VerificationPage() {
                     </View>
                     <Text style={styles.countdownText}>Countdown in 04:58</Text>
 
-                    {/* Continue Button */}
                     <GradientButton title={'Continue'} onPress={() => router.push('/personalInformation')} />
+                    {/* <GradientButton title='contiunue' onPress={() => router.push('/personalInformation')} /> */}
 
                     {/* Resend Link */}
                     <TouchableOpacity onPress={() => console.log('Resend code pressed')}>
@@ -78,11 +78,11 @@ export default function VerificationPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#362f2f',
+        backgroundColor: 'white',
     },
     container: {
         flex: 1,
-        backgroundColor: '#362f2f',
+        backgroundColor: 'white',
     },
     header: {
         flexDirection: 'row',
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#0c0b0bff',
     },
     contentContainer: {
         flex: 1,
@@ -105,12 +105,12 @@ const styles = StyleSheet.create({
     pageTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#0c0c0cff',
         marginBottom: 10,
     },
     instructionText: {
         fontSize: 16,
-        color: '#fff',
+        color: '#333', // Changed from '#fff' to a darker color for visibility
         textAlign: 'center',
         marginBottom: 30,
     },
@@ -127,29 +127,31 @@ const styles = StyleSheet.create({
     codeInput: {
         width: 50,
         height: 60,
-        backgroundColor: '#fff',
+        backgroundColor: '#f5f5f5', // Changed from '#fffdfdff' for better contrast
         borderRadius: 12,
         textAlign: 'center',
         fontSize: 24,
-        color: '#333',
+        color: '#141111ff',
         fontWeight: 'bold',
+        borderColor: '#ccc',
+        borderWidth: 1,
     },
     countdownText: {
         fontSize: 14,
         color: '#DD7800',
         marginBottom: 40,
     },
-    continueButton: {
-        width: '100%',
-        height: 50,
-        borderRadius: 25,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 6,
-    },
+    // continueButton: {
+    //     width: '100%',
+    //     height: 50,
+    //     borderRadius: 25,
+    //     marginBottom: 20,
+    //     shadowColor: '#000',
+    //     shadowOffset: { width: 0, height: 4 },
+    //     shadowOpacity: 0.3,
+    //     shadowRadius: 5,
+    //     elevation: 6,
+    // },
     continueButtonGradient: {
         flex: 1,
         borderRadius: 25,

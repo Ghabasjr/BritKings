@@ -23,6 +23,7 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
+                    headerShown: false,
                     title: 'Home',
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="home" size={24} color={color} />
@@ -32,6 +33,7 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="Properties"
                 options={{
+                    headerShown: false,
                     title: 'Properties',
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="home" size={24} color={color} />
@@ -39,20 +41,23 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name="payment"
+                name="Payment"
                 options={{
+                    headerShown: false,
                     title: 'Payment',
+
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="card" size={24} color={color} />
                     ),
                 }}
             />
             <Tabs.Screen
-                name="profile"
+                name="Profile"
                 options={{
+                    headerShown: false,
                     title: 'Profile',
                     tabBarIcon: ({ color }) => (
-                        <Ionicons name="body" size={24} color={color}
+                        <Ionicons name="person-outline" size={24} color={color}
                         />
                     ),
                 }}

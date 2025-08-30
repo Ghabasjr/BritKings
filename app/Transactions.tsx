@@ -106,7 +106,7 @@ export default function TransactionScreen() {
             {/* Header */}
             <View style={styles.header} >
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="black" />
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
 
                 <Text style={styles.headerTitle}>Transaction</Text>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingTop: 50,
+        marginTop: 40
     },
     header: {
         flexDirection: 'row',

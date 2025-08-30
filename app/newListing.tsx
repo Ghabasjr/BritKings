@@ -1,46 +1,62 @@
 import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 export default function NewListingScreen() {
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <Ionicons name="chevron-back" size={24} color="#000" />
-                <Text style={styles.headerTitle}>New Listing</Text>
-                <View style={{ width: 24 }} />
-            </View>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 30 }}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()}>
+                        <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>New Listing</Text>
+                    <View style={{ width: 24 }} />
+                </View>
 
-            <View style={styles.formContainer}>
-                {renderInput('Property ID')}
-                {renderInput('Address')}
-                {renderInput('Description', true)}
-                {renderInput('Size (sq ft)')}
-                {renderInput('Bedrooms')}
-                {renderInput('Parking')}
-                {renderInput('Bathrooms')}
-                {renderInput('Pools')}
-                {renderInput('Price')}
-                {renderInput('Status')}
-            </View>
+                {/* Form */}
+                <View style={styles.formContainer}>
+                    {renderInput('Property ID')}
+                    {renderInput('Address')}
+                    {renderInput('Description', true)}
+                    {renderInput('Size (sq ft)')}
+                    {renderInput('Bedrooms')}
+                    {renderInput('Parking')}
+                    {renderInput('Bathrooms')}
+                    {renderInput('Pools')}
+                    {renderInput('Price')}
+                    {renderInput('Status')}
+                </View>
 
-            <Text style={styles.imageHeader}>Property image</Text>
+                {/* Upload */}
+                <Text style={styles.imageHeader}>Property image</Text>
+                <View style={styles.imageUploadContainer}>
+                    <Text style={styles.uploadText}>Upload Image Here</Text>
+                    <GradientButton
+                        title={'Browse Files'}
+                        onPress={() => console.log('Browse Files Pressed')}
+                    />
+                </View>
 
-            <View style={styles.imageUploadContainer}>
-                <Text style={styles.uploadText}>Upload Image Here</Text>
-                <GradientButton title={'Browse Files'}
-                    onPress={() => console.log('Browse Files Pressed')}
-                // style={styles.browseButton}
-                />
-                <Text style={styles.browseButtonText}>Browse Files</Text>
-
-            </View>
-
-            <TouchableOpacity style={styles.previewButton}>
-                <Text style={styles.previewButtonText}>Preview</Text>
-            </TouchableOpacity>
-        </ScrollView>
+                {/* Submit */}
+                <GradientButton title={'Preview'} onPress={() => router.push('')} />
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
@@ -55,11 +71,15 @@ const renderInput = (placeholder, multiline = false) => (
 );
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
         backgroundColor: '#fff',
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: 10,
     },
     header: {
         flexDirection: 'row',
@@ -72,6 +92,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     formContainer: {
+        flex: 1,
         marginBottom: 20,
     },
     input: {
@@ -80,7 +101,7 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 15,
         borderWidth: 1,
-        borderColor: '#FFC107',
+        borderColor: "#DD7800",
     },
     multilineInput: {
         height: 100,
@@ -105,27 +126,5 @@ const styles = StyleSheet.create({
     uploadText: {
         marginBottom: 10,
         color: '#A9A9A9',
-    },
-    browseButton: {
-        backgroundColor: '#FFC107',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-    },
-    browseButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-    previewButton: {
-        backgroundColor: '#FFC107',
-        padding: 15,
-        borderRadius: 15,
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    previewButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
     },
 });

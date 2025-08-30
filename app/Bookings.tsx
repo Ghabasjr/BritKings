@@ -72,11 +72,11 @@ export default function BookingsPage() {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Bookings</Text>
                 <TouchableOpacity onPress={() => router.push('/createBookings')}>
-                    <Ionicons name="add" size={24} color="#ffa500" />
+                    <Ionicons name="add" size={24} color="#DD7800" />
                 </TouchableOpacity>
             </View>
 
@@ -91,7 +91,7 @@ export default function BookingsPage() {
                             [selected]: {
                                 selected: true,
                                 disableTouchEvent: true,
-                                selectedColor: '#ffa500',
+                                selectedColor: '#DD7800',
                                 selectedTextColor: '#fff'
                             },
                             '2024-08-07': { marked: true, dotColor: '#ffa500' },
@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        paddingTop: 30
     },
     header: {
         flexDirection: 'row',

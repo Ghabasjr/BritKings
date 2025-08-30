@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -100,7 +101,7 @@ export default function PlotsPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
+                <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#ffa500" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Plots</Text>
@@ -121,10 +122,7 @@ export default function PlotsPage() {
                 </View>
             </ScrollView>
 
-            {/* Placeholder for Bottom Navigation */}
-            <View style={styles.bottomNav}>
-                <Text style={styles.navText}>Bottom Nav</Text>
-            </View>
+
         </SafeAreaView>
     );
 }
@@ -132,7 +130,8 @@ export default function PlotsPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#362f2f',
+        backgroundColor: '#fcfcfcff',
+        paddingTop: 30
     },
     header: {
         flexDirection: 'row',
@@ -144,7 +143,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#030303ff',
     },
     scrollContent: {
         padding: 16,

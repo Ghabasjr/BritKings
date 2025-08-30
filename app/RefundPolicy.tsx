@@ -1,4 +1,6 @@
+import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -9,7 +11,9 @@ export default function RefundPolicyScreen() {
         <ScrollView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Ionicons name="chevron-back" size={24} color="black" />
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Refund Policy</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -32,9 +36,7 @@ export default function RefundPolicyScreen() {
             </View>
 
             {/* Button */}
-            <TouchableOpacity style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>save and continue</Text>
-            </TouchableOpacity>
+            <GradientButton title={'save and continue'} onPress={() => router.push()} />
         </ScrollView>
     );
 }
@@ -43,8 +45,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingHorizontal: 30,
+        // marginTop: 40
+        paddingTop: 40
     },
     header: {
         flexDirection: 'row',

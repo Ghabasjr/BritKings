@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -6,7 +7,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } fr
 const NotificationItem = ({ icon, title, message, time }) => (
     <View style={notificationItemStyles.card}>
         <View style={notificationItemStyles.iconContainer}>
-            <Ionicons name={icon} size={24} color="#ffa500" />
+            <Ionicons name={icon} size={24} color="#DD7800" />
         </View>
         <View style={notificationItemStyles.content}>
             <Text style={notificationItemStyles.title}>{title}</Text>
@@ -70,8 +71,8 @@ export default function NotificationsPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Notifications</Text>
                 <View style={{ width: 24 }} />

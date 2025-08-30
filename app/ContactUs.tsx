@@ -1,4 +1,6 @@
+import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
     FlatList,
@@ -91,8 +93,8 @@ const ContactUsScreen = () => {
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton}>
-                    <Ionicons name="chevron-back" size={24} color="#333" />
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Contact Us</Text>
                 <View style={styles.headerSpacer} />
@@ -130,13 +132,8 @@ const ContactUsScreen = () => {
 
                 {/* New Submission Button */}
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                        style={styles.newSubmissionButton}
-                        onPress={handleNewSubmission}
-                        activeOpacity={0.9}
-                    >
-                        <Text style={styles.newSubmissionButtonText}>New Submission</Text>
-                    </TouchableOpacity>
+                    <GradientButton
+                        onPress={handleNewSubmission} title={'New Submission'} />
                 </View>
             </View>
         </SafeAreaView>
@@ -147,6 +144,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+        paddingTop: 35
     },
     header: {
         flexDirection: 'row',

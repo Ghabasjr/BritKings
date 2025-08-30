@@ -1,4 +1,6 @@
+import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -15,7 +17,10 @@ export default function ContactUsScreen() {
         <ScrollView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <Ionicons name="chevron-back" size={24} color="black" />
+                <TouchableOpacity onPress={() => router.back()}>
+
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Contact Us</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -42,9 +47,7 @@ export default function ContactUsScreen() {
             </View>
 
             {/* Resend Confirmation Button */}
-            <TouchableOpacity style={styles.resendButton}>
-                <Text style={styles.resendButtonText}>Resend Confirmations</Text>
-            </TouchableOpacity>
+            <GradientButton title={'Resend Confirmations'} onPress={() => router.push('/performanceScreen')} />
         </ScrollView>
     );
 }
@@ -54,7 +57,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: 40,
     },
     header: {
         flexDirection: 'row',

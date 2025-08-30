@@ -79,7 +79,7 @@ export default function PaymentPage() {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
+                    <Ionicons name="chevron-back" size={24} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Payment</Text>
                 <View style={{ width: 24 }} />

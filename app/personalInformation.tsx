@@ -17,7 +17,7 @@ export default function PersonalInfoPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
+                <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Personal Information</Text>
@@ -27,7 +27,6 @@ export default function PersonalInfoPage() {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.formContainer}>
                     <CustomInputs
-                        style={styles.input}
                         placeholder="Full name"
                         placeholderTextColor="#888"
                         value={fullName}
@@ -35,7 +34,6 @@ export default function PersonalInfoPage() {
                     />
                     <View style={styles.inputWithIcon}>
                         <CustomInputs
-                            style={styles.input}
                             placeholder="Date of birth"
                             placeholderTextColor="#888"
                             value={dob}
@@ -44,21 +42,18 @@ export default function PersonalInfoPage() {
                         <Ionicons name="calendar-outline" size={24} color="#888" style={styles.inputIcon} />
                     </View>
                     <CustomInputs
-                        style={styles.input}
                         placeholder="Nationality"
                         placeholderTextColor="#888"
                         value={nationality}
                         onChangeText={setNationality}
                     />
                     <CustomInputs
-                        style={styles.input}
                         placeholder="Address"
                         placeholderTextColor="#888"
                         value={address}
                         onChangeText={setAddress}
                     />
                     <CustomInputs
-                        style={styles.input}
                         placeholder="Phone number"
                         placeholderTextColor="#888"
                         keyboardType="phone-pad"
@@ -66,14 +61,12 @@ export default function PersonalInfoPage() {
                         onChangeText={setPhoneNumber}
                     />
                     <CustomInputs
-                        style={styles.input}
                         placeholder="Occupation"
                         placeholderTextColor="#888"
                         value={occupation}
                         onChangeText={setOccupation}
                     />
                     <CustomInputs
-                        style={styles.input}
                         placeholder="Email Address"
                         placeholderTextColor="#888"
                         keyboardType="email-address"
@@ -82,10 +75,9 @@ export default function PersonalInfoPage() {
                         onChangeText={setEmail}
                     />
                 </View>
+                <GradientButton title={'Continue'} onPress={() => router.push('/upload')} />
             </ScrollView>
 
-            {/* Continue Button */}
-            <GradientButton title={'Continue'} onPress={() => router.push('/upload')} />
         </SafeAreaView>
     );
 }
@@ -94,6 +86,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        // paddingTop: 50
     },
     header: {
         flexDirection: 'row',

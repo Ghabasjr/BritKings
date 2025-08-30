@@ -1,6 +1,7 @@
 import CustomInputs from '@/components/CustomInputs/CustomInputs';
 import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -29,7 +30,7 @@ export default function CreateBookingsPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
+                <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#ffa500" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Create Bookings</Text>
@@ -130,7 +131,9 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
+        paddingTop: 30
     },
+
     header: {
         flexDirection: 'row',
         alignItems: 'center',
