@@ -31,7 +31,7 @@ export default function PropertyLocationPage() {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} />
+                    <Ionicons name="chevron-back" size={24} color="#ffa500"/>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Property</Text>
                 <View style={{ width: 24 }} />
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: 'white',
-        paddingTop: 20,
+        paddingTop: 50,
         paddingHorizontal: 10
     },
     header: {

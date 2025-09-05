@@ -7,19 +7,15 @@ import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, Vi
 export default function PropertyDetailsScreen() {
     return (
         <SafeAreaView style={styles.safeArea}>
-
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()}>
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Property Details</Text>
+                <View style={{ width: 24 }} />
+            </View>
 
             <ScrollView style={styles.container}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()}>
-
-                        <Ionicons name="chevron-back" size={24} color="#DD7800" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Property Details</Text>
-                    <View style={{ width: 24 }} />
-                </View>
-
                 {/* Property Images */}
                 <View style={styles.imageContainer}>
                     <View style={styles.imageCard}>
@@ -68,13 +64,12 @@ export default function PropertyDetailsScreen() {
                         {renderPropertyDetail('Payment', 'Mortgage')}
                     </View>
                 </View>
-
+                
+                {/* Back Button that scrolls with the content */}
+                <View style={styles.buttonWrapper}>
+                    <GradientButton title={'Back'} onPress={() => router.back()} />
+                </View>
             </ScrollView>
-            <GradientButton title={'Back'} onPress={() => router.push()} />
-
-
-            {/* Back Button */}
-
         </SafeAreaView>
     );
 }
@@ -97,15 +92,18 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-
-
+        paddingTop: 40,
+        paddingHorizontal: 10
     },
     container: {
         flex: 1,
         backgroundColor: '#fff',
         paddingHorizontal: 20,
-        paddingTop: 50
-
+        paddingTop: 15
+    },
+    buttonWrapper: {
+        marginVertical: 20,
+        paddingHorizontal: 10
     },
     header: {
         flexDirection: 'row',

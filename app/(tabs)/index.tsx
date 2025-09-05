@@ -262,7 +262,10 @@ export default function RealEstateHomePage() {
                     />
                 </View>
 
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{paddingBottom: 100}}
+                >
                     {/* Featured Properties Section */}
                     <Text style={styles.sectionTitle}>Featured Properties</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuredScrollView}>
@@ -288,9 +291,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 30
-
-
+        paddingTop: 35
     },
     container: {
         flex: 1,

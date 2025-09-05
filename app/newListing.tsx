@@ -74,12 +74,13 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
+        paddingTop: 30
     },
     container: {
         flex: 1,
         backgroundColor: '#fff',
         paddingHorizontal: 20,
-        paddingTop: 10,
+        paddingTop: 15,
     },
     header: {
         flexDirection: 'row',

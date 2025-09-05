@@ -5,6 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import 'react-native-reanimated';
 import { useColorScheme } from '../hooks/useColorScheme';
 
@@ -55,35 +56,40 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="signup" options={{ headerShown: false }} />
-        <Stack.Screen name="verification" options={{ headerShown: false }} />
-        <Stack.Screen name="upload" options={{ headerShown: false }} />
-        <Stack.Screen name="personalInformation" options={{ headerShown: false }} />
-        <Stack.Screen name="property" options={{ headerShown: false }} />
-        <Stack.Screen name='plots' options={{ headerShown: false }} />
-        <Stack.Screen name='Bookings' options={{ headerShown: false }} />
-        <Stack.Screen name='propertiesPage' options={{ headerShown: false }} />
-        <Stack.Screen name='paymentPage' options={{ headerShown: false }} />
-        <Stack.Screen name='notification' options={{ headerShown: false }} />
-        <Stack.Screen name='editProfile' options={{ headerShown: false }} />
-        <Stack.Screen name='changePassword' options={{ headerShown: false }} />
-        <Stack.Screen name='settings' options={{ headerShown: false }} />
-        <Stack.Screen name='createBookings' options={{ headerShown: false }} />
-        <Stack.Screen name='Tasks' options={{ headerShown: false }} />
-        <Stack.Screen name='newListing' options={{ headerShown: false }} />
-        <Stack.Screen name='PropertyDetails' options={{ headerShown: false }} />
-        <Stack.Screen name='PerformanceScreen' options={{ headerShown: false }} />
-        <Stack.Screen name='AchievedStaff' options={{ headerShown: false }} />
-        <Stack.Screen name='Transactions' options={{ headerShown: false }} />
-        <Stack.Screen name='profileScreen' options={{ headerShown: false }} />
-        <Stack.Screen name='RefundPolicy' options={{ headerShown: false }} />
-        <Stack.Screen name='ContactUs' options={{ headerShown: false }} />
-        <Stack.Screen name='ContactUs2' options={{ headerShown: false }} />
-
-      </Stack>
+      <KeyboardAvoidingView 
+        style={{ flex: 1, paddingTop: Platform.OS === 'ios' ? 10 : 0 }} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      >
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="signup" options={{ headerShown: false }} />
+          <Stack.Screen name="verification" options={{ headerShown: false }} />
+          <Stack.Screen name="upload" options={{ headerShown: false }} />
+          <Stack.Screen name="personalInformation" options={{ headerShown: false }} />
+          <Stack.Screen name="property" options={{ headerShown: false }} />
+          <Stack.Screen name='plots' options={{ headerShown: false }} />
+          <Stack.Screen name='Bookings' options={{ headerShown: false }} />
+          <Stack.Screen name='propertiesPage' options={{ headerShown: false }} />
+          <Stack.Screen name='paymentPage' options={{ headerShown: false }} />
+          <Stack.Screen name='notification' options={{ headerShown: false }} />
+          <Stack.Screen name='editProfile' options={{ headerShown: false }} />
+          <Stack.Screen name='changePassword' options={{ headerShown: false }} />
+          <Stack.Screen name='settings' options={{ headerShown: false }} />
+          <Stack.Screen name='createBookings' options={{ headerShown: false }} />
+          <Stack.Screen name='Tasks' options={{ headerShown: false }} />
+          <Stack.Screen name='newListing' options={{ headerShown: false }} />
+          <Stack.Screen name='PropertyDetails' options={{ headerShown: false }} />
+          <Stack.Screen name='PerformanceScreen' options={{ headerShown: false }} />
+          <Stack.Screen name='AchievedStaff' options={{ headerShown: false }} />
+          <Stack.Screen name='Transactions' options={{ headerShown: false }} />
+          <Stack.Screen name='profileScreen' options={{ headerShown: false }} />
+          <Stack.Screen name='RefundPolicy' options={{ headerShown: false }} />
+          <Stack.Screen name='ContactUs' options={{ headerShown: false }} />
+          <Stack.Screen name='ContactUs2' options={{ headerShown: false }} />
+        </Stack>
+      </KeyboardAvoidingView>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </ThemeProvider>
   );

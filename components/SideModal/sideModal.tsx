@@ -55,7 +55,7 @@ const SideModal = ({ isVisible, onClose }) => {
                     <Text style={styles.menuText}>Property Map View</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/Biometric-Settings')}>
+                <TouchableOpacity style={styles.menuItem} onPress={() => handleNavigation('/settings')}>
                     <Text style={styles.menuText}>Biometric Settings</Text>
                 </TouchableOpacity>
 

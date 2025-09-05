@@ -1,6 +1,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 
 export default function TabLayout() {
     return (
@@ -10,13 +11,34 @@ export default function TabLayout() {
                 tabBarActiveTintColor: '#000000',
                 tabBarInactiveTintColor: '#A0A0A0',
                 tabBarStyle: {
-                    height: 70,
-                    paddingBottom: 10,
-                    paddingTop: 10,
+                    height: 55,
+                    paddingBottom: 5,
+                    paddingTop: 2,
                     backgroundColor: '#fff',
-                    borderTopWidth: 0.5,
+                    borderTopWidth: 0,
                     borderTopColor: '#e0e0e0',
+                    position: 'absolute',
+                    bottom: 0, // Move up from the bottom to avoid phone navigation
+                    left: 0,
+                    right: 0,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                    paddingHorizontal: 10,
+                    zIndex: 1000,
                 },
+                tabBarBackground: () => (
+                    <View style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 30,
+                        backgroundColor: '#fff',
+                        borderTopWidth: 0,
+                        borderTopColor: '#e0e0e0',
+                        zIndex: 999,
+                    }} />
+                ),
 
             }}
         >
@@ -36,7 +58,7 @@ export default function TabLayout() {
                     headerShown: false,
                     title: 'Properties',
                     tabBarIcon: ({ color }) => (
-                        <Ionicons name="home" size={24} color={color} />
+                        <Ionicons name="filter" size={24} color={color} />
                     ),
                 }}
             />

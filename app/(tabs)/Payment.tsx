@@ -79,13 +79,16 @@ export default function PaymentPage() {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} />
+                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Payment</Text>
                 <View style={{ width: 24 }} />
             </View>
 
-            <ScrollView style={styles.container}>
+            <ScrollView 
+                style={styles.container}
+                contentContainerStyle={{paddingBottom: 100}}
+            >
                 <View style={styles.sectionContainer}>
                     <Text style={styles.sectionHeader}>Payment Summary</Text>
                     {paymentSummary.map((item, index) => (
@@ -108,6 +111,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
+        paddingTop:30
     },
     header: {
         flexDirection: 'row',

@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/BritKings.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.ghabasjr.BritKings"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bd969203-53c5-4fb0-9115-98ffea32ccd3"
+      }
     }
   }
 }

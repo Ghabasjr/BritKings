@@ -113,8 +113,7 @@ export default function SignupPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        // marginTop: 30,
-        paddingTop: 80,
+        paddingTop: 20,
         backgroundColor: '#F5F5F5',
 
     },

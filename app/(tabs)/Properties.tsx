@@ -41,7 +41,7 @@ export default function PropertiesPage() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView contentContainerStyle={{...styles.scrollContent, paddingBottom: 100}}>
                 {activeView === 'map' ? (
                     <View style={styles.mapContainer}>
                         <MapView
@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
+        paddingTop: 30,
     },
     header: {
         flexDirection: 'row',

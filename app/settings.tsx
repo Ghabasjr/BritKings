@@ -117,6 +117,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: 16,
+        paddingBottom: 100, // Add extra padding at the bottom to prevent tab bar overlap
     },
     sectionHeader: {
         fontSize: 16,

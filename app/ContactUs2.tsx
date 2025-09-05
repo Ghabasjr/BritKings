@@ -14,7 +14,8 @@ const DetailItem = ({ label, value }) => (
 
 export default function ContactUsScreen() {
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container}
+        contentContainerStyle={{paddingBottom: 40}}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
@@ -47,7 +48,7 @@ export default function ContactUsScreen() {
             </View>
 
             {/* Resend Confirmation Button */}
-            <GradientButton title={'Resend Confirmations'} onPress={() => router.push('/performanceScreen')} />
+            <GradientButton title={'Resend Confirmations'} onPress={() => router.push('/PerformanceScreen')} />
         </ScrollView>
     );
 }
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
         paddingHorizontal: 20,
-        paddingTop: 40,
+        paddingTop: 50,
     },
     header: {
         flexDirection: 'row',
