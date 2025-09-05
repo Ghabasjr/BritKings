@@ -102,6 +102,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         marginTop: 50,
+        paddingBottom: 100,
     },
     pageTitle: {
         fontSize: 24,

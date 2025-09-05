@@ -1,4 +1,6 @@
+import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -67,10 +69,14 @@ const PerformanceChart = () => {
 
 export default function PerformanceScreen() {
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} 
+        contentContainerStyle={{paddingBottom:100}}>
             {/* Header */}
             <View style={styles.header}>
-                <Ionicons name="chevron-back" size={24} color="black" />
+                <TouchableOpacity onPress={()=> router.back()}>
+                <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                </TouchableOpacity>
+
                 <Text style={styles.headerTitle}>Performance</Text>
                 <View style={{ width: 24 }} />
             </View>
@@ -159,9 +165,8 @@ export default function PerformanceScreen() {
             </View>
 
             {/* Save & Continue Button */}
-            <TouchableOpacity style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>save & Continue</Text>
-            </TouchableOpacity>
+            <GradientButton title={'save & Continue'} onPress={()=> router.push('')}/>
+           
         </ScrollView>
     );
 }
@@ -329,4 +334,4 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-}); s
+});

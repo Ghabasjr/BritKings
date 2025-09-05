@@ -42,7 +42,7 @@ const ProfileScreen = () => {
 
         switch (item.title) {
             case 'Personal Information':
-                router.push('/PerformanceScreen');
+                router.push('/personalInformation');
                 break;
             case 'KYC Status':
                 router.push('/AchievedStaff');
@@ -51,7 +51,7 @@ const ProfileScreen = () => {
                 router.push('/property');
                 break;
             case 'Payment Information':
-                router.push('/Tasks');
+                router.push('/Payment');
                 break;
             case 'Notification':
                 router.push('/notification');
@@ -60,7 +60,7 @@ const ProfileScreen = () => {
                 router.push('/paymentPage');
                 break;
             case 'Help & Support':
-                router.push('/RefunPolicy');
+                router.push('/RefundPolicy');
                 break;
             case 'Settings':
                 router.push('/settings');

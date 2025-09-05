@@ -235,7 +235,8 @@ export default function RealEstateHomePage() {
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+                    <TouchableOpacity onPress={() => setIsModalVisible(true)}  style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Ionicons name='menu' size={24} color="#333"/>
                         <Text style={styles.headerTitle}>BGC Real Estate</Text>
                     </TouchableOpacity>
                     <View style={styles.headerIcons}>

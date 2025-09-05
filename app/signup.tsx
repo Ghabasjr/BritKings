@@ -113,16 +113,17 @@ export default function SignupPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        paddingTop: 20,
+        paddingTop: 60,
         backgroundColor: '#F5F5F5',
 
     },
     login: {
-        color: 'black'
+        color:"#DD7800"
     },
     container: {
         flex: 1,
         paddingHorizontal: 20,
+        paddingBottom: 100,
     },
     logo: {
         width: 100,
@@ -138,7 +139,7 @@ const styles = StyleSheet.create({
     account: {
         display: 'flex',
         flexDirection: 'row',
-        alignItems: 'center',
+        // alignItems: 'center',
         justifyContent: 'center',
         gap: 6
     },

@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 20
+        paddingTop: 30
     },
     header: {
         flexDirection: 'row',
@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: 16,
+        paddingBottom: 100,
     },
     formContainer: {
         backgroundColor: '#fff',
