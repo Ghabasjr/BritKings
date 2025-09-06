@@ -235,10 +235,10 @@ export default function RealEstateHomePage() {
             <View style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => setIsModalVisible(true)}  style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Ionicons name='menu' size={24} color="#333"/>
-                        <Text style={styles.headerTitle}>BGC Real Estate</Text>
+                    <TouchableOpacity onPress={() => setIsModalVisible(true)} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                        <Ionicons name='menu' size={24} color="#333" />
                     </TouchableOpacity>
+                    <Text style={styles.headerTitle}>BGC Real Estate</Text>
                     <View style={styles.headerIcons}>
                         <TouchableOpacity onPress={() => router.push('/newListing')}>
                             <Ionicons name="add-circle-outline" size={24} color="#333" style={{ marginRight: 15 }} />
@@ -263,9 +263,9 @@ export default function RealEstateHomePage() {
                     />
                 </View>
 
-                <ScrollView 
+                <ScrollView
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{paddingBottom: 100}}
+                    contentContainerStyle={{ paddingBottom: 100 }}
                 >
                     {/* Featured Properties Section */}
                     <Text style={styles.sectionTitle}>Featured Properties</Text>

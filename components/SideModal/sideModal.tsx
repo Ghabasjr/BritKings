@@ -72,12 +72,13 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: 10,
+        // paddingTop: 5
     },
     modalContainer: {
         width: '70%',
         height: '100%',
         backgroundColor: '#fff',
-        paddingTop: 50,
+        paddingTop: 60,
         paddingLeft: 20,
     },
     closeButton: {

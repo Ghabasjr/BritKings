@@ -92,7 +92,7 @@ const ProfileScreen = () => {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} >
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
             {/* Header */}
@@ -104,9 +104,9 @@ const ProfileScreen = () => {
                 <View style={styles.headerSpacer} />
             </View>
 
-            <ScrollView 
-                style={styles.scrollView} 
-                contentContainerStyle={{paddingBottom: 100}} 
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={{ paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Profile Section */}
@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#f8f9fa',
         paddingTop: 30,
+        paddingBottom: 80
     },
     header: {
         flexDirection: 'row',
