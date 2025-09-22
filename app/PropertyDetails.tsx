@@ -92,14 +92,14 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 40,
+        paddingTop: 20,
         paddingHorizontal: 10
     },
     container: {
         flex: 1,
         backgroundColor: '#fff',
         paddingHorizontal: 20,
-        paddingTop: 15
+        paddingTop: 10
     },
     buttonWrapper: {
         marginVertical: 20,
