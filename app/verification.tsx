@@ -1,12 +1,71 @@
 import GradientButton from '@/components/GradientButton/GradientButton';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { sendOtp, validateOtp } from '@/store/slices/authSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NativeSyntheticEvent, SafeAreaView, StyleSheet, Text, TextInput, TextInputKeyPressEventData, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export default function VerificationPage() {
-    const [code, setCode] = useState(['', '', '', '', '']);
+    const [code, setCode] = useState(['', '', '', '', '', '']);
+    const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
     const codeInputs = useRef([]);
+
+    const dispatch = useAppDispatch();
+    const { user, loading } = useAppSelector((state) => state.auth);
+    const userEmail = user?.email || '';
+
+    // Countdown timer
+    useEffect(() => {
+        if (countdown > 0) {
+            const timer = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [countdown]);
+
+    // Format countdown to MM:SS
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Send OTP when component mounts
+    useEffect(() => {
+        if (userEmail) {
+            handleSendOtp();
+        }
+    }, []);
+
+    const handleSendOtp = async () => {
+        if (!userEmail) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Email not found. Please register again.',
+            });
+            return;
+        }
+
+        try {
+            await dispatch(sendOtp(userEmail)).unwrap();
+            Toast.show({
+                type: 'success',
+                text1: 'OTP Sent',
+                text2: `Verification code sent to ${userEmail}`,
+            });
+            setCountdown(300); // Reset countdown
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to Send OTP',
+                text2: error || 'Please try again',
+            });
+        }
+    };
 
     const handleChange = (text: string | any[], index: number) => {
         const newCode = [...code];
@@ -14,7 +73,7 @@ export default function VerificationPage() {
         setCode(newCode);
 
         // Focus on the next input if a digit was entered
-        if (text.length === 1 && index < 4) {
+        if (text.length === 1 && index < 5) {
             codeInputs.current[index + 1].focus();
         }
     };
@@ -23,6 +82,44 @@ export default function VerificationPage() {
         // Handle backspace to clear and move to the previous input
         if (key === 'Backspace' && index > 0 && code[index] === '') {
             codeInputs.current[index - 1].focus();
+        }
+    };
+
+    const handleVerify = async () => {
+        const otp = code.join('');
+
+        if (otp.length !== 6) {
+            Toast.show({
+                type: 'error',
+                text1: 'Invalid Code',
+                text2: 'Please enter the complete 6-digit code',
+            });
+            return;
+        }
+
+        if (!userEmail) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Email not found. Please register again.',
+            });
+            return;
+        }
+
+        try {
+            await dispatch(validateOtp({ email: userEmail, otp })).unwrap();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Email verified successfully!',
+            });
+            router.push('/login');
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Verification Failed',
+                text2: error || 'Invalid code. Please try again.',
+            });
         }
     };
 
@@ -42,7 +139,8 @@ export default function VerificationPage() {
                 <View style={styles.contentContainer}>
                     <Text style={styles.pageTitle}>Britkings</Text>
                     <Text style={styles.instructionText}>
-                        Great one, we have sent a verification code to <Text style={styles.emailText}>Example@email.com</Text>
+                        Great one, we have sent a verification code to{' '}
+                        <Text style={styles.emailText}>{userEmail || 'your email'}</Text>
                     </Text>
 
                     {/* Code Input Fields */}
@@ -60,14 +158,24 @@ export default function VerificationPage() {
                             />
                         ))}
                     </View>
-                    <Text style={styles.countdownText}>Countdown in 04:58</Text>
+                    <Text style={styles.countdownText}>
+                        {countdown > 0 ? `Countdown in ${formatTime(countdown)}` : 'Code expired'}
+                    </Text>
 
-                    <GradientButton title={'Continue'} onPress={() => router.push('/personalInformation')} />
-                    {/* <GradientButton title='contiunue' onPress={() => router.push('/personalInformation')} /> */}
+                    <GradientButton
+                        title={loading ? 'Verifying...' : 'Continue'}
+                        onPress={handleVerify}
+                        disabled={loading}
+                    />
 
                     {/* Resend Link */}
-                    <TouchableOpacity onPress={() => console.log('Resend code pressed')}>
-                        <Text style={styles.resendText}>Can't get verification code?</Text>
+                    <TouchableOpacity
+                        onPress={handleSendOtp}
+                        disabled={countdown > 0}
+                    >
+                        <Text style={[styles.resendText, countdown > 0 && styles.resendTextDisabled]}>
+                            {countdown > 0 ? "Can't get verification code?" : 'Resend Code'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -79,7 +187,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: 'white',
-        paddingTop: 20
+        paddingTop: 40
     },
     container: {
         flex: 1,
@@ -112,7 +220,7 @@ const styles = StyleSheet.create({
     },
     instructionText: {
         fontSize: 16,
-        color: '#333', // Changed from '#fff' to a darker color for visibility
+        color: '#333',
         textAlign: 'center',
         marginBottom: 30,
     },
@@ -124,12 +232,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         maxWidth: 300,
+        gap: 10,
         marginBottom: 10,
     },
     codeInput: {
         width: 50,
         height: 60,
-        backgroundColor: '#f5f5f5', // Changed from '#fffdfdff' for better contrast
+        backgroundColor: '#f5f5f5',
         borderRadius: 12,
         textAlign: 'center',
         fontSize: 24,
@@ -143,17 +252,6 @@ const styles = StyleSheet.create({
         color: '#DD7800',
         marginBottom: 40,
     },
-    // continueButton: {
-    //     width: '100%',
-    //     height: 50,
-    //     borderRadius: 25,
-    //     marginBottom: 20,
-    //     shadowColor: '#000',
-    //     shadowOffset: { width: 0, height: 4 },
-    //     shadowOpacity: 0.3,
-    //     shadowRadius: 5,
-    //     elevation: 6,
-    // },
     continueButtonGradient: {
         flex: 1,
         borderRadius: 25,
@@ -169,5 +267,8 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#DD7800',
         fontWeight: 'bold',
+    },
+    resendTextDisabled: {
+        color: '#999',
     },
 });

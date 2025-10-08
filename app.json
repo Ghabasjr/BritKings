@@ -34,6 +34,12 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you upload property images."
+        }
       ]
     ],
     "experiments": {
@@ -45,9 +51,7 @@
         "projectId": "bd969203-53c5-4fb0-9115-98ffea32ccd3"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/bd969203-53c5-4fb0-9115-98ffea32ccd3"
     }

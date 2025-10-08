@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // A component for the featured property cards
-const FeaturedPropertyCard = ({ title, location, type, rating, price, image }) => (
+const FeaturedPropertyCard = ({ title, location, type, rating, price, image }: any) => (
     <TouchableOpacity style={featuredStyles.card} onPress={() => router.push('/PropertyDetails')}>
         <Image
             source={{ uri: image }}
@@ -119,7 +119,7 @@ const featuredStyles = StyleSheet.create({
 });
 
 // A component for the recent transaction cards
-const RecentTransactionCard = ({ title, status, image }) => {
+const RecentTransactionCard = ({ title, status, image }: any) => {
     let statusColor = status === 'Sold' ? '#888' : '#82b586';
 
     return (
@@ -211,9 +211,11 @@ export default function RealEstateHomePage() {
     const [isModalVisible, setIsModalVisible] = useState(false)
 
     // Function to filter data based on search query
-    const handleSearch = (query) => {
+    const handleSearch = (query: any) => {
         setSearchQuery(query);
         const lowerCaseQuery = query.toLowerCase();
+
+
 
         // Filter featured properties
         const filteredFeatured = allFeaturedProperties.filter(property =>
@@ -230,6 +232,11 @@ export default function RealEstateHomePage() {
         setRecentTransactions(filteredRecent);
     };
 
+    const handleCreateProperty = () => {
+        router.push('/createProperties');
+    }
+
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
@@ -240,7 +247,8 @@ export default function RealEstateHomePage() {
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>BGC Real Estate</Text>
                     <View style={styles.headerIcons}>
-                        <TouchableOpacity onPress={() => router.push('/newListing')}>
+                        <TouchableOpacity onPress={handleCreateProperty} style={{ marginRight: 15 }}>
+
                             <Ionicons name="add-circle-outline" size={24} color="#333" style={{ marginRight: 15 }} />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => router.push('/notification')}>
@@ -292,13 +300,13 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 35,
-        paddingBottom: 80
+        paddingTop: 30,
+        paddingBottom: 0
     },
     container: {
         flex: 1,
         paddingHorizontal: 16,
-        backgroundColor: '#f5f5f5',
+        // backgroundColor: '#f5f5f5',
     },
     header: {
         flexDirection: 'row',

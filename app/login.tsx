@@ -1,19 +1,64 @@
 import CustomInput from '@/components/CustomInputs/CustomInputs';
 import GradientButton from '@/components/GradientButton/GradientButton';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { login } from '@/store/slices/authSlice';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('');
+    const [emailOrPhoneNumber, setEmailOrPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    const dispatch = useAppDispatch();
+    const { loading } = useAppSelector((state) => state.auth);
+
+    const handleLogin = async () => {
+        if (!emailOrPhoneNumber || !password) {
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Please fill in all fields',
+            });
+            return;
+        }
+
+        try {
+            await dispatch(login({ emailOrPhoneNumber, password })).unwrap();
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Login successful!',
+            });
+            router.push('/(tabs)');
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Login Failed',
+                text2: error || 'Please try again',
+            });
+        }
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                style={styles.keyboardView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={styles.container}>
                 {/* Logo Section */}
                 <Image
-                    source={{ uri: '/assets/BritKings.png' }}
+                    source={require('../assets/BritKings.png')}
                     style={styles.logo}
                 />
                 <Text style={styles.welcomeText}>Welcome Back, To Britking</Text>
@@ -23,26 +68,35 @@ export default function LoginPage() {
                     <CustomInput
                         placeholder="Email/Phone"
                         placeholderTextColor="#888"
-                        keyboardType="email-address"
+                        keyboardType="default"
                         autoCapitalize="none"
-                        value={email}
-                        onChangeText={setEmail}
+                        value={emailOrPhoneNumber}
+                        onChangeText={setEmailOrPhoneNumber}
                     />
-                    <View >
+                    <View style={styles.passwordContainer}>
                         <CustomInput
                             placeholder="Password"
                             placeholderTextColor="#888"
-                            secureTextEntry
+                            secureTextEntry={!showPassword}
                             value={password}
                             onChangeText={setPassword}
                         />
-                        {/* Using a placeholder for the eye icon */}
+                        <TouchableOpacity
+                            style={styles.eyeIcon}
+                            onPress={() => setShowPassword(!showPassword)}
+                        >
+                            <Ionicons
+                                name={showPassword ? "eye-off" : "eye"}
+                                size={24}
+                                color="#888"
+                            />
+                        </TouchableOpacity>
                     </View>
                     <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
                         <Text style={styles.forgotPasswordText}>Can't remember your password?</Text>
                     </TouchableOpacity>
 
-                    <GradientButton title={'Login'} onPress={() => router.push('/(tabs)')} />
+                    <GradientButton title={loading ? 'Logging in...' : 'Login'} onPress={handleLogin} disabled={loading} />
 
                     <View style={styles.account}>
                         <Text>
@@ -59,6 +113,8 @@ export default function LoginPage() {
                     <Text style={styles.biometricText}>Biometric Login</Text>
                 </TouchableOpacity>
             </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -69,6 +125,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5F5F5',
         paddingTop: 20,
     },
+    keyboardView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+    },
     container: {
         flex: 1,
         paddingHorizontal: 20,
@@ -78,6 +140,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         marginBottom: 20,
+        alignSelf: 'center',
     },
     account: {
         display: 'flex',
@@ -90,12 +153,21 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: '#070505ff',
         marginBottom: 40,
+        alignSelf: 'center',
     },
     formContainer: {
         width: '100%',
         // backgroundColor: '#362f2f',
     },
-
+    passwordContainer: {
+        position: 'relative',
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 15,
+        top: 25,
+        zIndex: 1,
+    },
     forgotPasswordText: {
         textAlign: 'right',
         color: '#DD7800',

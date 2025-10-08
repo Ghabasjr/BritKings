@@ -145,16 +145,16 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
-        paddingTop: 30,
-        paddingBottom: 80
+        // backgroundColor: '#f8f9fa',
+        paddingTop: 5,
+        paddingBottom: 0
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 10,
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
         width: 32,
     },
     scrollView: {
-        flex: 1,
+        // flex: 1,
     },
     profileSection: {
         backgroundColor: '#fff',

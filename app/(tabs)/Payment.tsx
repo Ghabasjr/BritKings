@@ -85,9 +85,9 @@ export default function PaymentPage() {
                 <View style={{ width: 24 }} />
             </View>
 
-            <ScrollView 
+            <ScrollView
                 style={styles.container}
-                contentContainerStyle={{paddingBottom: 100}}
+                contentContainerStyle={{ paddingBottom: 100 }}
             >
                 <View style={styles.sectionContainer}>
                     <Text style={styles.sectionHeader}>Payment Summary</Text>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop:30
+        paddingTop: 0
     },
     header: {
         flexDirection: 'row',

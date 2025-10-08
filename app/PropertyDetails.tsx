@@ -64,7 +64,7 @@ export default function PropertyDetailsScreen() {
                         {renderPropertyDetail('Payment', 'Mortgage')}
                     </View>
                 </View>
-                
+
                 {/* Back Button that scrolls with the content */}
                 <View style={styles.buttonWrapper}>
                     <GradientButton title={'Back'} onPress={() => router.back()} />
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 20,
+        paddingTop: 50,
         paddingHorizontal: 10
     },
     container: {

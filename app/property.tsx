@@ -1,10 +1,8 @@
+import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-// Import MapView from expo-map
-// import MapView, { Marker } from 'expo-map';
-import GradientButton from '@/components/GradientButton/GradientButton';
-import { router } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
 
 export default function PropertyLocationPage() {
@@ -31,7 +29,7 @@ export default function PropertyLocationPage() {
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500"/>
+                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Property</Text>
                 <View style={{ width: 24 }} />
