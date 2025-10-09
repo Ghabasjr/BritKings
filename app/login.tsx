@@ -5,8 +5,9 @@ import { login } from '@/store/slices/authSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+
 
 export default function LoginPage() {
     const [emailOrPhoneNumber, setEmailOrPhoneNumber] = useState('');
@@ -14,7 +15,7 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
 
     const dispatch = useAppDispatch();
-    const { loading } = useAppSelector((state) => state.auth);
+    const { isLoading } = useAppSelector((state) => state.auth);
 
     const handleLogin = async () => {
         if (!emailOrPhoneNumber || !password) {
@@ -27,18 +28,21 @@ export default function LoginPage() {
         }
 
         try {
-            await dispatch(login({ emailOrPhoneNumber, password })).unwrap();
+            const result = await dispatch(login({ emailOrPhoneNumber, password })).unwrap();
+
             Toast.show({
                 type: 'success',
-                text1: 'Success',
-                text2: 'Login successful!',
+                text1: result?.message || 'Login Successful',
+                text2: 'Welcome back!',
             });
-            router.push('/(tabs)');
+
+            // Navigate to home after successful login
+            router.replace('/(tabs)');
         } catch (error: any) {
             Toast.show({
                 type: 'error',
                 text1: 'Login Failed',
-                text2: error || 'Please try again',
+                text2: error?.message || error || 'Invalid credentials',
             });
         }
     };
@@ -46,20 +50,19 @@ export default function LoginPage() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <KeyboardAvoidingView
-                style={styles.keyboardView}
+                style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.container}>
                 {/* Logo Section */}
                 <Image
-                    source={require('../assets/BritKings.png')}
+                    source={require('@/assets/BritKings.png')}
                     style={styles.logo}
+                    resizeMode="contain"
                 />
                 <Text style={styles.welcomeText}>Welcome Back, To Britking</Text>
 
@@ -68,7 +71,7 @@ export default function LoginPage() {
                     <CustomInput
                         placeholder="Email/Phone"
                         placeholderTextColor="#888"
-                        keyboardType="default"
+                        keyboardType="email-address"
                         autoCapitalize="none"
                         value={emailOrPhoneNumber}
                         onChangeText={setEmailOrPhoneNumber}
@@ -86,7 +89,7 @@ export default function LoginPage() {
                             onPress={() => setShowPassword(!showPassword)}
                         >
                             <Ionicons
-                                name={showPassword ? "eye-off" : "eye"}
+                                name={showPassword ? 'eye-off' : 'eye'}
                                 size={24}
                                 color="#888"
                             />
@@ -96,7 +99,16 @@ export default function LoginPage() {
                         <Text style={styles.forgotPasswordText}>Can't remember your password?</Text>
                     </TouchableOpacity>
 
-                    <GradientButton title={loading ? 'Logging in...' : 'Login'} onPress={handleLogin} disabled={loading} />
+                    {isLoading ? (
+                        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                            <ActivityIndicator size="large" color="#DD7800" />
+                        </View>
+                    ) : (
+                        <GradientButton
+                            title="Login"
+                            onPress={handleLogin}
+                        />
+                    )}
 
                     <View style={styles.account}>
                         <Text>
@@ -112,7 +124,7 @@ export default function LoginPage() {
                 <TouchableOpacity style={styles.biometricButton} onPress={() => console.log('Biometric login pressed')}>
                     <Text style={styles.biometricText}>Biometric Login</Text>
                 </TouchableOpacity>
-            </View>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -125,22 +137,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5F5F5',
         paddingTop: 20,
     },
-    keyboardView: {
-        flex: 1,
-    },
-    scrollContent: {
-        flexGrow: 1,
-    },
     container: {
         flex: 1,
         paddingHorizontal: 20,
         justifyContent: 'center',
     },
     logo: {
+        alignSelf: 'center',
         width: 100,
         height: 100,
         marginBottom: 20,
-        alignSelf: 'center',
     },
     account: {
         display: 'flex',
@@ -150,24 +156,16 @@ const styles = StyleSheet.create({
         gap: 6
     },
     welcomeText: {
+        alignSelf: 'center',
         fontSize: 20,
         color: '#070505ff',
         marginBottom: 40,
-        alignSelf: 'center',
     },
     formContainer: {
         width: '100%',
         // backgroundColor: '#362f2f',
     },
-    passwordContainer: {
-        position: 'relative',
-    },
-    eyeIcon: {
-        position: 'absolute',
-        right: 15,
-        top: 25,
-        zIndex: 1,
-    },
+
     forgotPasswordText: {
         textAlign: 'right',
         color: '#DD7800',
@@ -199,5 +197,14 @@ const styles = StyleSheet.create({
         color: '#DD7800',
         fontWeight: 'bold',
         alignItems: 'center'
+    },
+    passwordContainer: {
+        position: 'relative',
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 15,
+        top: 25,
+        zIndex: 1,
     },
 });
