@@ -7,7 +7,7 @@
     "icon": "./assets/BritKings.png",
     "scheme": "BritKings",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -17,7 +17,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ghabasjr.BritKings"
+      "package": "com.ghabasjr.BritKings",
+      "versionCode": 1,
+      "minSdkVersion": 23,
+      "targetSdkVersion": 34,
+      "buildToolsVersion": "34.0.0"
     },
     "web": {
       "bundler": "metro",
