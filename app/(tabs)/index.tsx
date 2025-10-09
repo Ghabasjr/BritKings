@@ -233,7 +233,7 @@ export default function RealEstateHomePage() {
     };
 
     const handleCreateProperty = () => {
-        router.push('/createProperties');
+        router.push('/newListing');
     }
 
 

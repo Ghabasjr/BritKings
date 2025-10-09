@@ -200,7 +200,7 @@ import GradientButton from '@/components/GradientButton/GradientButton';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { createProperty } from '@/store/slices/propertiesSlice';
 import { Ionicons } from '@expo/vector-icons';
-// import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React from 'react';
 import {
@@ -245,36 +245,36 @@ export default function NewListingScreen() {
     const handleImageUpload = async () => {
         try {
             const permissionResult =
-                //     await ImagePicker.requestMediaLibraryPermissionsAsync();
-                // if (!permissionResult.granted) {
-                //     return Toast.show({
-                //         type: 'error',
-                //         text1: 'Permission denied',
-                //         text2: 'You need to grant photo access to upload an image.',
-                //     });
-                // }
+                await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permissionResult.granted) {
+                return Toast.show({
+                    type: 'error',
+                    text1: 'Permission denied',
+                    text2: 'You need to grant photo access to upload an image.',
+                });
+            }
 
-                // const result = await ImagePicker.launchImageLibraryAsync({
-                //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                //     allowsEditing: true,
-                //     aspect: [4, 3],
-                //     quality: 0.8,
-                // });
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.8,
+            });
 
-                // if (result.canceled) return;
+            if (result.canceled) return;
 
-                // const file = result.assets[0];
-                setUploading(true);
+            const file = result.assets[0];
+            setUploading(true);
 
             const uploadUrl =
                 'https://globalroot-gateway-service-816009aa3954.herokuapp.com/api/v1/user/document/upload-document?id=ec9490a7-e501-436a-9bc3-771ba6956b21';
 
             const formData = new FormData();
-            // formData.append('file', {
-            //     uri: file.uri,
-            //     name: file.fileName || 'property.jpg',
-            //     type: file.mimeType || 'image/jpeg',
-            // } as any);
+            formData.append('file', {
+                uri: file.uri,
+                name: file.fileName || 'property.jpg',
+                type: file.mimeType || 'image/jpeg',
+            } as any);
 
             const response = await fetch(uploadUrl, {
                 method: 'POST',
