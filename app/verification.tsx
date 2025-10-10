@@ -1,20 +1,19 @@
 import GradientButton from '@/components/GradientButton/GradientButton';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { sendOtp, validateOtp } from '@/store/slices/authSlice';
+import { sendOTP, validateOTP } from '@/store/slices/authSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { NativeSyntheticEvent, SafeAreaView, StyleSheet, Text, TextInput, TextInputKeyPressEventData, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, NativeSyntheticEvent, SafeAreaView, StyleSheet, Text, TextInput, TextInputKeyPressEventData, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 export default function VerificationPage() {
     const [code, setCode] = useState(['', '', '', '', '', '']);
     const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
-    const codeInputs = useRef([]);
+    const codeInputs = useRef<Array<TextInput | null>>([]);
 
     const dispatch = useAppDispatch();
-    const { user, loading } = useAppSelector((state) => state.auth);
-    const userEmail = user?.email || '';
+    const { isLoading, pendingVerificationEmail } = useAppSelector((state) => state.auth);
 
     // Countdown timer
     useEffect(() => {
@@ -22,103 +21,156 @@ export default function VerificationPage() {
             const timer = setInterval(() => {
                 setCountdown((prev) => prev - 1);
             }, 1000);
+
             return () => clearInterval(timer);
         }
     }, [countdown]);
 
-    // Format countdown to MM:SS
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    };
 
-    // Send OTP when component mounts
     useEffect(() => {
-        if (userEmail) {
-            handleSendOtp();
-        }
-    }, []);
+        // Send OTP when component mounts (only if we have an email)
+        const sendInitialOTP = async () => {
+            if (!pendingVerificationEmail) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'No email found for verification',
+                });
+                return;
+            }
 
-    const handleSendOtp = async () => {
-        if (!userEmail) {
-            Toast.show({
-                type: 'error',
-                text1: 'Error',
-                text2: 'Email not found. Please register again.',
-            });
-            return;
-        }
+            try {
+                await dispatch(sendOTP(pendingVerificationEmail)).unwrap();
+                Toast.show({
+                    type: 'success',
+                    text1: 'OTP Sent',
+                    text2: 'Verification code sent to your email',
+                });
+            } catch (error: any) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Failed to Send OTP',
+                    text2: error || 'Please try again',
+                });
+            }
+        };
 
-        try {
-            await dispatch(sendOtp(userEmail)).unwrap();
-            Toast.show({
-                type: 'success',
-                text1: 'OTP Sent',
-                text2: `Verification code sent to ${userEmail}`,
-            });
-            setCountdown(300); // Reset countdown
-        } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Send OTP',
-                text2: error || 'Please try again',
-            });
-        }
+        sendInitialOTP();
+    }, [pendingVerificationEmail]); // Re-run if email changes
+
+
+    // Format countdown time
+    const formatTime = (seconds: number) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
-    const handleChange = (text: string | any[], index: number) => {
+    const handleChange = (text: string, index: number) => {
         const newCode = [...code];
         newCode[index] = text;
         setCode(newCode);
 
         // Focus on the next input if a digit was entered
         if (text.length === 1 && index < 5) {
-            codeInputs.current[index + 1].focus();
+            codeInputs.current[index + 1]?.focus();
         }
     };
 
     const handleKeyPress = ({ nativeEvent: { key } }: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
         // Handle backspace to clear and move to the previous input
         if (key === 'Backspace' && index > 0 && code[index] === '') {
-            codeInputs.current[index - 1].focus();
+            codeInputs.current[index - 1]?.focus();
         }
     };
 
     const handleVerify = async () => {
-        const otp = code.join('');
+        const otpCode = code.join('');
 
-        if (otp.length !== 6) {
+        if (otpCode.length !== 6) {
             Toast.show({
                 type: 'error',
-                text1: 'Invalid Code',
+                text1: 'Invalid OTP',
                 text2: 'Please enter the complete 6-digit code',
             });
             return;
         }
 
-        if (!userEmail) {
+        if (!pendingVerificationEmail) {
             Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: 'Email not found. Please register again.',
+                text2: 'No email found for verification',
             });
             return;
         }
 
         try {
-            await dispatch(validateOtp({ email: userEmail, otp })).unwrap();
+            const result = await dispatch(validateOTP({
+                otp: otpCode,
+                email: pendingVerificationEmail
+            })).unwrap();
+
             Toast.show({
                 type: 'success',
-                text1: 'Success',
-                text2: 'Email verified successfully!',
+                text1: result?.responseMessage || result?.message || 'Verification Successful',
+                text2: 'Your account has been verified',
             });
+
+            // Navigate to personal information page
             router.push('/login');
         } catch (error: any) {
+            console.error('Verification error:', error);
+
+            // Extract meaningful error message
+            let errorMessage = 'Invalid OTP code';
+
+            if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            } else if (error?.error) {
+                errorMessage = error.error;
+            } else if (error?.data?.message) {
+                errorMessage = error.data.message;
+            }
+
             Toast.show({
                 type: 'error',
                 text1: 'Verification Failed',
-                text2: error || 'Invalid code. Please try again.',
+                text2: errorMessage,
+            });
+        }
+    };
+
+    const handleResendOTP = async () => {
+        if (!pendingVerificationEmail) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'No email found for verification',
+            });
+            return;
+        }
+
+        try {
+            const result = await dispatch(sendOTP(pendingVerificationEmail)).unwrap();
+
+            Toast.show({
+                type: 'success',
+                text1: result?.responseMessage || result?.message || 'OTP Sent',
+                text2: 'A new verification code has been sent',
+            });
+
+            // Reset countdown and code
+            setCountdown(300);
+            setCode(['', '', '', '', '', '']);
+            codeInputs.current[0]?.focus();
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to Send OTP',
+                text2: error?.message || error || 'Please try again',
             });
         }
     };
@@ -139,8 +191,7 @@ export default function VerificationPage() {
                 <View style={styles.contentContainer}>
                     <Text style={styles.pageTitle}>Britkings</Text>
                     <Text style={styles.instructionText}>
-                        Great one, we have sent a verification code to{' '}
-                        <Text style={styles.emailText}>{userEmail || 'your email'}</Text>
+                        Great one, we have sent a verification code to your email/phone
                     </Text>
 
                     {/* Code Input Fields */}
@@ -155,26 +206,32 @@ export default function VerificationPage() {
                                 onKeyPress={(event) => handleKeyPress(event, index)}
                                 value={value}
                                 ref={(ref) => (codeInputs.current[index] = ref)}
+                                editable={!isLoading}
                             />
                         ))}
                     </View>
                     <Text style={styles.countdownText}>
-                        {countdown > 0 ? `Countdown in ${formatTime(countdown)}` : 'Code expired'}
+                        {countdown > 0 ? `Countdown: ${formatTime(countdown)}` : 'Code expired'}
                     </Text>
 
-                    <GradientButton
-                        title={loading ? 'Verifying...' : 'Continue'}
-                        onPress={handleVerify}
-                        disabled={loading}
-                    />
+                    {isLoading ? (
+                        <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                            <ActivityIndicator size="large" color="#DD7800" />
+                        </View>
+                    ) : (
+                        <GradientButton title={'Continue'} onPress={handleVerify} />
+                    )}
 
                     {/* Resend Link */}
                     <TouchableOpacity
-                        onPress={handleSendOtp}
-                        disabled={countdown > 0}
+                        onPress={handleResendOTP}
+                        disabled={isLoading || countdown > 0}
                     >
-                        <Text style={[styles.resendText, countdown > 0 && styles.resendTextDisabled]}>
-                            {countdown > 0 ? "Can't get verification code?" : 'Resend Code'}
+                        <Text style={[
+                            styles.resendText,
+                            (isLoading || countdown > 0) && { opacity: 0.5 }
+                        ]}>
+                            {countdown > 0 ? "Can't get verification code?" : "Resend Code"}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -232,7 +289,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         width: '100%',
         maxWidth: 300,
-        gap: 10,
         marginBottom: 10,
     },
     codeInput: {
@@ -267,8 +323,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#DD7800',
         fontWeight: 'bold',
-    },
-    resendTextDisabled: {
-        color: '#999',
+        marginTop: 10,
     },
 });

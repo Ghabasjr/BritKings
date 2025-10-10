@@ -9,7 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 export default function PropertiesPage() {
@@ -19,16 +19,44 @@ export default function PropertiesPage() {
         name: '',
         price: 0,
         size: '',
-        status: 'AVAILABLE',
+        status: undefined,
         page: 1,
         limit: 10,
     });
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [updateModalVisible, setUpdateModalVisible] = useState(false);
+    const [filterModalVisible, setFilterModalVisible] = useState(false);
+    const [selectedProperty, setSelectedProperty] = useState<any>(null);
+    const [formData, setFormData] = useState({
+        price: '',
+        status: '',
+        bedrooms: '',
+        bathroom: '',
+        size: '',
+        parking: '',
+    });
+
 
     useEffect(() => {
-        loadProperties();
-    }, []);
+        const fetchProperties = async () => {
+            try {
+                await dispatch(searchProperties({ page: 1, limit: 10 })).unwrap();
+            } catch (error) {
+                console.error("Failed to fetch properties", error);
+            }
+        };
+
+        fetchProperties();
+    }, [dispatch]);
+
+    useEffect(() => {
+        const delaySearch = setTimeout(() => {
+            handleSearch();
+        }, 500); // Debounce search by 500ms
+
+        return () => clearTimeout(delaySearch);
+    }, [filters]);
 
     const loadProperties = async () => {
         try {
@@ -64,19 +92,25 @@ export default function PropertiesPage() {
 
     const handleCreateProperty = () => router.push('/newListing');
 
-    const handleUpdateProperty = async (propertyId: string) => {
+    const handleUpdateProperty = async () => {
         try {
-            const result = await dispatch(updateProperty({
-                id: propertyId,
-                price: 550000,
-                status: 'SOLD',
-            })).unwrap();
+            const updateData: any = { id: selectedProperty.propertyId };
+
+            if (formData.price) updateData.price = Number(formData.price);
+            if (formData.status) updateData.status = formData.status;
+            if (formData.bedrooms) updateData.bedrooms = Number(formData.bedrooms);
+            if (formData.bathroom) updateData.bathroom = Number(formData.bathroom);
+            if (formData.size) updateData.size = formData.size;
+            if (formData.parking) updateData.parking = Number(formData.parking);
+
+            const result = await dispatch(updateProperty(updateData)).unwrap();
 
             Toast.show({
                 type: 'success',
                 text1: 'Property Updated',
                 text2: result?.responseMessage || 'Property updated successfully',
             });
+            setUpdateModalVisible(false);
             loadProperties();
         } catch (error: any) {
             Toast.show({
@@ -154,13 +188,28 @@ export default function PropertiesPage() {
             <View style={styles.propertyActions}>
                 <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() => handleViewProperty(item.propertyId)}
+                    onPress={() => {
+                        setSelectedProperty(item);
+                        setUpdateModalVisible(true);
+                    }}
+                // onPress={() => handleViewProperty(item.propertyId)}
                 >
                     <Ionicons name="eye" size={20} color="#DD7800" />
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() => handleUpdateProperty(item.propertyId)}
+                    onPress={() => {
+                        setSelectedProperty(item);
+                        setFormData({
+                            price: item.price?.toString() || '',
+                            status: item.status || '',
+                            bedrooms: item.bedrooms?.toString() || '',
+                            bathroom: item.bathroom?.toString() || '',
+                            size: item.size || '',
+                            parking: item.parking?.toString() || '',
+                        });
+                        setUpdateModalVisible(true);
+                    }}
                 >
                     <Ionicons name="pencil" size={20} color="#007AFF" />
                 </TouchableOpacity>
@@ -190,11 +239,13 @@ export default function PropertiesPage() {
                         style={styles.searchInput}
                         placeholder="Search properties..."
                         value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        onSubmitEditing={handleSearch}
+                        onChangeText={(text) => {
+                            setSearchQuery(text);
+                            setFilters({ ...filters, name: text });
+                        }} onSubmitEditing={handleSearch}
                     />
                 </View>
-                <TouchableOpacity style={styles.filterButton}>
+                <TouchableOpacity style={styles.filterButton} onPress={() => setFilterModalVisible(true)}>
                     <Ionicons name="options" size={24} color="#DD7800" />
                 </TouchableOpacity>
             </View>
@@ -224,6 +275,224 @@ export default function PropertiesPage() {
                 />
 
             )}
+
+            {/* Filter Modal */}
+            <Modal
+                visible={filterModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setFilterModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Filter Properties</Text>
+                            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody}>
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Maximum Price</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Enter maximum price"
+                                    value={filters.price?.toString() || ''}
+                                    onChangeText={(text) => setFilters({ ...filters, price: text ? Number(text) : 0 })}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Size</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Enter size (e.g., 100m²)"
+                                    value={filters.size || ''}
+                                    onChangeText={(text) => setFilters({ ...filters, size: text })}
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Status</Text>
+                                <View style={styles.statusButtons}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.statusButton,
+                                            !filters.status && styles.statusButtonActive
+                                        ]}
+                                        onPress={() => setFilters({ ...filters, status: undefined })}
+                                    >
+                                        <Text style={[
+                                            styles.statusButtonText,
+                                            !filters.status && styles.statusButtonTextActive
+                                        ]}>
+                                            ALL
+                                        </Text>
+                                    </TouchableOpacity>
+                                    {['AVAILABLE', 'SOLD'].map((status) => (
+                                        <TouchableOpacity
+                                            key={status}
+                                            style={[
+                                                styles.statusButton,
+                                                filters.status === status && styles.statusButtonActive
+                                            ]}
+                                            onPress={() => setFilters({ ...filters, status: status as any })}
+                                        >
+                                            <Text style={[
+                                                styles.statusButtonText,
+                                                filters.status === status && styles.statusButtonTextActive
+                                            ]}>
+                                                {status}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => {
+                                    setFilters({
+                                        name: '',
+                                        price: 0,
+                                        size: '',
+                                        status: undefined,
+                                        page: 1,
+                                        limit: 10,
+                                    });
+                                    setSearchQuery('');
+                                    setFilterModalVisible(false);
+                                }}
+                            >
+                                <Text style={styles.cancelButtonText}>Clear All</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.updateButton}
+                                onPress={() => setFilterModalVisible(false)}
+                            >
+                                <Text style={styles.updateButtonText}>Apply</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Update Property Modal */}
+            <Modal
+                visible={updateModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setUpdateModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Update Property</Text>
+                            <TouchableOpacity onPress={() => setUpdateModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody}>
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Price</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Enter price"
+                                    value={formData.price}
+                                    onChangeText={(text) => setFormData({ ...formData, price: text })}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Status</Text>
+                                <View style={styles.statusButtons}>
+                                    {['AVAILABLE', 'SOLD'].map((status) => (
+                                        <TouchableOpacity
+                                            key={status}
+                                            style={[
+                                                styles.statusButton,
+                                                formData.status === status && styles.statusButtonActive
+                                            ]}
+                                            onPress={() => setFormData({ ...formData, status })}
+                                        >
+                                            <Text style={[
+                                                styles.statusButtonText,
+                                                formData.status === status && styles.statusButtonTextActive
+                                            ]}>
+                                                {status}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Bedrooms</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Number of bedrooms"
+                                    value={formData.bedrooms}
+                                    onChangeText={(text) => setFormData({ ...formData, bedrooms: text })}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Bathrooms</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Number of bathrooms"
+                                    value={formData.bathroom}
+                                    onChangeText={(text) => setFormData({ ...formData, bathroom: text })}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Size (m²)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Property size"
+                                    value={formData.size}
+                                    onChangeText={(text) => setFormData({ ...formData, size: text })}
+                                />
+                            </View>
+
+                            <View style={styles.formGroup}>
+                                <Text style={styles.label}>Parking Spaces</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Number of parking spaces"
+                                    value={formData.parking}
+                                    onChangeText={(text) => setFormData({ ...formData, parking: text })}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity
+                                style={styles.cancelButton}
+                                onPress={() => setUpdateModalVisible(false)}
+                            >
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.updateButton}
+                                onPress={handleUpdateProperty}
+                            >
+                                <Text style={styles.updateButtonText}>Update</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -391,5 +660,106 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        width: '90%',
+        maxHeight: '80%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    modalBody: {
+        padding: 20,
+    },
+    formGroup: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        color: '#333',
+    },
+    statusButtons: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    statusButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        alignItems: 'center',
+    },
+    statusButtonActive: {
+        backgroundColor: '#DD7800',
+        borderColor: '#DD7800',
+    },
+    statusButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#666',
+    },
+    statusButtonTextActive: {
+        color: '#fff',
+    },
+    modalFooter: {
+        flexDirection: 'row',
+        padding: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#eee',
+        gap: 12,
+    },
+    cancelButton: {
+        flex: 1,
+        padding: 14,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        alignItems: 'center',
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#666',
+    },
+    updateButton: {
+        flex: 1,
+        padding: 14,
+        borderRadius: 8,
+        backgroundColor: '#DD7800',
+        alignItems: 'center',
+    },
+    updateButtonText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
     },
 });
