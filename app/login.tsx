@@ -58,72 +58,72 @@ export default function LoginPage() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.container}>
-                {/* Logo Section */}
-                <Image
-                    source={require('@/assets/BritKings.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
-                />
-                <Text style={styles.welcomeText}>Welcome Back, To Britking</Text>
-
-                {/* Form Section */}
-                <View >
-                    <CustomInput
-                        placeholder="Email/Phone"
-                        placeholderTextColor="#888"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        value={emailOrPhoneNumber}
-                        onChangeText={setEmailOrPhoneNumber}
-                    />
-                    <View style={styles.passwordContainer}>
-                        <CustomInput
-                            placeholder="Password"
-                            placeholderTextColor="#888"
-                            secureTextEntry={!showPassword}
-                            value={password}
-                            onChangeText={setPassword}
+                        {/* Logo Section */}
+                        <Image
+                            source={require('@/assets/BritKings.png')}
+                            style={styles.logo}
+                            resizeMode="contain"
                         />
-                        <TouchableOpacity
-                            style={styles.eyeIcon}
-                            onPress={() => setShowPassword(!showPassword)}
-                        >
-                            <Ionicons
-                                name={showPassword ? 'eye-off' : 'eye'}
-                                size={24}
-                                color="#888"
+                        <Text style={styles.welcomeText}>Welcome Back, To Britking</Text>
+
+                        {/* Form Section */}
+                        <View >
+                            <CustomInput
+                                placeholder="Email/Phone"
+                                placeholderTextColor="#888"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                value={emailOrPhoneNumber}
+                                onChangeText={setEmailOrPhoneNumber}
                             />
-                        </TouchableOpacity>
-                    </View>
-                    <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
-                        <Text style={styles.forgotPasswordText}>Can't remember your password?</Text>
-                    </TouchableOpacity>
+                            <View style={styles.passwordContainer}>
+                                <CustomInput
+                                    placeholder="Password"
+                                    placeholderTextColor="#888"
+                                    secureTextEntry={!showPassword}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                />
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={() => setShowPassword(!showPassword)}
+                                >
+                                    <Ionicons
+                                        name={showPassword ? 'eye-off' : 'eye'}
+                                        size={24}
+                                        color="#888"
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                            <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
+                                <Text style={styles.forgotPasswordText}>Can't remember your password?</Text>
+                            </TouchableOpacity>
 
-                    {isLoading ? (
-                        <View style={{ alignItems: 'center', marginVertical: 20 }}>
-                            <ActivityIndicator size="large" color="#DD7800" />
+                            {isLoading ? (
+                                <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                                    <ActivityIndicator size="large" color="#DD7800" />
+                                </View>
+                            ) : (
+                                <GradientButton
+                                    title="Login"
+                                    onPress={handleLogin}
+                                />
+                            )}
+
+                            <View style={styles.account}>
+                                <Text>
+                                    Don't have an account?
+                                </Text>
+                                <TouchableOpacity onPress={() => router.push('/signup')}>
+                                    <Text style={styles.signupText}>Sign Up</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    ) : (
-                        <GradientButton
-                            title="Login"
-                            onPress={handleLogin}
-                        />
-                    )}
 
-                    <View style={styles.account}>
-                        <Text>
-                            Don't have an account?
-                        </Text>
-                        <TouchableOpacity onPress={() => router.push('/signup')}>
-                            <Text style={styles.signupText}>Sign Up</Text>
+                        {/* Biometric Login */}
+                        <TouchableOpacity style={styles.biometricButton} onPress={() => console.log('Biometric login pressed')}>
+                            <Text style={styles.biometricText}>Biometric Login</Text>
                         </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* Biometric Login */}
-                <TouchableOpacity style={styles.biometricButton} onPress={() => console.log('Biometric login pressed')}>
-                    <Text style={styles.biometricText}>Biometric Login</Text>
-                </TouchableOpacity>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
