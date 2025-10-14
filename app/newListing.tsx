@@ -2,8 +2,9 @@ import GradientButton from '@/components/GradientButton/GradientButton';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { createProperty } from '@/store/slices/propertiesSlice';
 import { Ionicons } from '@expo/vector-icons';
-// import * as DocumentPicker from 'expo-document-picker';
-// import * as MediaLibrary from 'expo-media-library';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as DocumentPicker from 'expo-document-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { router } from 'expo-router';
 import React from 'react';
 import {
@@ -45,76 +46,93 @@ export default function NewListingScreen() {
         setForm({ ...form, [key]: value });
     };
 
-    // const handleImageUpload = async () => {
-    //     try {
-    //         // Ask for media library permission
-    //         const { status } = await MediaLibrary.requestPermissionsAsync();
-    //         if (status !== "granted") {
-    //             return Toast.show({
-    //                 type: "error",
-    //                 text1: "Permission denied",
-    //                 text2: "You need to grant photo access to upload an image.",
-    //             });
-    //         }
+    const handleImageUpload = async () => {
+        try {
+            // Ask for media library permission
+            const { status } = await MediaLibrary.requestPermissionsAsync();
+            if (status !== "granted") {
+                return Toast.show({
+                    type: "error",
+                    text1: "Permission denied",
+                    text2: "You need to grant photo access to upload an image.",
+                });
+            }
 
-    //         // Pick an image file
-    //         const result = await DocumentPicker.getDocumentAsync({
-    //             type: "image/*",
-    //             copyToCacheDirectory: true,
-    //         });
+            // Pick an image file
+            const result = await DocumentPicker.getDocumentAsync({
+                type: "image/*",
+                copyToCacheDirectory: true,
+            });
 
-    //         if (result.canceled || !result.assets?.[0]) return;
+            if (result.canceled || !result.assets?.[0]) return;
 
-    //         const file = result.assets[0];
-    //         setUploading(true);
+            const file = result.assets[0];
+            setUploading(true);
 
-    //         // Upload file to your backend
-    //         const uploadUrl =
-    //             "https://globalroot-gateway-service-816009aa3954.herokuapp.com/api/v1/user/document/upload-document?id=ec9490a7-e501-436a-9bc3-771ba6956b21";
+            // Get token from AsyncStorage
+            const token = await AsyncStorage.getItem('authToken');
 
-    //         const formData = new FormData();
-    //         formData.append("file", {
-    //             uri: file.uri,
-    //             name: file.name || "property.jpg",
-    //             type: file.mimeType || "image/jpeg",
-    //         } as any);
+            if (!token) {
+                Toast.show({
+                    type: "error",
+                    text1: "Authentication required",
+                    text2: "Please login again to upload images.",
+                });
+                setUploading(false);
+                return;
+            }
 
-    //         const response = await fetch(uploadUrl, {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "multipart/form-data",
-    //             },
-    //             body: formData,
-    //         });
+            console.log("Token retrieved for upload:", token ? "Token exists" : "No token");
 
-    //         const data = await response.json();
+            // Upload file to your backend
+            const uploadUrl =
+                "https://globalroot-gateway-service-816009aa3954.herokuapp.com/api/v1/user/document/upload-document?id=ec9490a7-e501-436a-9bc3-771ba6956b21";
 
-    //         if (!response.ok) {
-    //             throw new Error(data?.message || "Failed to upload image");
-    //         }
+            const formData = new FormData();
+            formData.append("file", {
+                uri: file.uri,
+                name: file.name || "property.jpg",
+                type: file.mimeType || "image/jpeg",
+            } as any);
 
-    //         const uploadedUrl = data?.url;
+            const response = await fetch(uploadUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: formData,
+            });
 
-    //         setForm((prev) => ({
-    //             ...prev,
-    //             propertyImageUrl: uploadedUrl,
-    //         }));
+            const data = await response.json();
+            console.log("Upload response:", data);
 
-    //         Toast.show({
-    //             type: "success",
-    //             text1: "Image uploaded successfully",
-    //         });
-    //     } catch (error: any) {
-    //         console.error("Upload error:", error);
-    //         Toast.show({
-    //             type: "error",
-    //             text1: "Upload failed",
-    //             text2: error.message,
-    //         });
-    //     } finally {
-    //         setUploading(false);
-    //     }
-    // };
+            if (!response.ok) {
+                throw new Error(data?.message || data?.responseMessage || "Failed to upload image");
+            }
+
+            const uploadedUrl = data?.url || data?.responseData?.url;
+
+            setForm((prev) => ({
+                ...prev,
+                propertyImageUrl: uploadedUrl,
+            }));
+
+            Toast.show({
+                type: "success",
+                text1: "Image uploaded successfully",
+            });
+        } catch (error: any) {
+            console.error("Upload error:", error);
+            Toast.show({
+                type: "error",
+                text1: "Upload failed",
+                text2: error.message,
+            });
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const handleSubmit = async () => {
         try {
@@ -190,7 +208,7 @@ export default function NewListingScreen() {
                         )}
                         <GradientButton
                             title={uploading ? 'Uploading...' : 'Browse Files'}
-                        // onPress={handleImageUpload}
+                            onPress={handleImageUpload}
                         />
                     </View>
 

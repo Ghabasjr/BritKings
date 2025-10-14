@@ -1,5 +1,3 @@
-
-
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
@@ -26,16 +24,9 @@ const ProfileScreen = () => {
         { id: '1', title: 'Personal Information', icon: 'person-outline' },
         { id: '2', title: 'KYC Status', icon: 'checkmark-circle-outline' },
         { id: '3', title: 'Property Listing', icon: 'home-outline' },
-        { id: '4', title: 'Payment Information', icon: 'card-outline' },
     ];
 
-    const accountMenuItems: MenuItem[] = [
-        { id: '5', title: 'Notification', icon: 'notifications-outline' },
-        { id: '6', title: 'Language', icon: 'language-outline' },
-        { id: '7', title: 'Help & Support', icon: 'help-circle-outline' },
-        { id: '8', title: 'Settings', icon: 'settings' },
-        { id: '9', title: 'Logout', icon: 'log-out-outline' },
-    ];
+
 
     const handleMenuPress = (item: MenuItem) => {
         console.log(`Pressed: ${item.title}`);
@@ -49,21 +40,6 @@ const ProfileScreen = () => {
                 break;
             case 'Property Listing':
                 router.push('/property');
-                break;
-            case 'Payment Information':
-                router.push('/Payment');
-                break;
-            case 'Notification':
-                router.push('/notification');
-                break;
-            case 'Language':
-                router.push('/paymentPage');
-                break;
-            case 'Help & Support':
-                router.push('/RefundPolicy');
-                break;
-            case 'Settings':
-                router.push('/settings');
                 break;
             case 'Logout':
                 // Implement your logout logic here
@@ -120,21 +96,14 @@ const ProfileScreen = () => {
                         />
                     </View>
                     <Text style={styles.userName}>Efrain Carter</Text>
+                    <Text>Efrain@gmail.com</Text>
                 </View>
 
                 {/* Personal Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Personal</Text>
-                    <View style={styles.menuContainer}>
-                        {personalMenuItems.map(renderMenuItem)}
-                    </View>
-                </View>
-
-                {/* Account Section */}
-                <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account</Text>
                     <View style={styles.menuContainer}>
-                        {accountMenuItems.map(renderMenuItem)}
+                        {personalMenuItems.map(renderMenuItem)}
                     </View>
                 </View>
             </ScrollView>
@@ -145,9 +114,9 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        // backgroundColor: '#f8f9fa',
+        backgroundColor: '#f8f9fa',
         paddingTop: 5,
-        paddingBottom: 0
+
     },
     header: {
         flexDirection: 'row',
@@ -171,7 +140,7 @@ const styles = StyleSheet.create({
         width: 32,
     },
     scrollView: {
-        // flex: 1,
+        flex: 1,
     },
     profileSection: {
         backgroundColor: '#fff',

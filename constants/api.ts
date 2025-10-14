@@ -14,9 +14,7 @@ export const AUTH_ENDPOINTS = {
 
 // Properties Endpoints
 export const PROPERTIES_ENDPOINTS = {
-  CREATE: `${API_VERSION}/properties`,
   UPDATE: (propertyId: string) => `${API_VERSION}/properties/${propertyId}`,
-  DELETE: (propertyId: string) => `${API_VERSION}/properties/${propertyId}`,
   GET_BY_ID: (propertyId: string) => `${API_VERSION}/properties/${propertyId}`,
   SEARCH: `${API_VERSION}/properties`,
 };

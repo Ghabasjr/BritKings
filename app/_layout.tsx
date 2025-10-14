@@ -11,6 +11,7 @@ import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { store } from '../store';
+import { restoreAuth } from '../store/slices/authSlice';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -31,9 +32,18 @@ export default function RootLayout() {
       if (loaded) {
         try {
           // Check if user is already authenticated
-          const authToken = await AsyncStorage.getItem('@auth_token');
+          const authToken = await AsyncStorage.getItem('authToken');
+          const userRole = await AsyncStorage.getItem('userRole');
 
-          if (authToken) {
+          if (authToken && userRole) {
+            // Restore auth state in Redux
+            store.dispatch(restoreAuth({
+              token: authToken,
+              userRole: userRole as 'Agent' | 'Client'
+            }));
+
+            console.log('Auth restored - Token:', authToken ? 'Present' : 'Missing', 'Role:', userRole);
+
             // User is authenticated, go to main app
             router.replace('/(tabs)');
           } else {
@@ -67,7 +77,9 @@ export default function RootLayout() {
         >
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="agentIndex" options={{ headerShown: false }} />
             <Stack.Screen name="signup" options={{ headerShown: false }} />
             <Stack.Screen name="verification" options={{ headerShown: false }} />
             <Stack.Screen name="upload" options={{ headerShown: false }} />
@@ -91,7 +103,10 @@ export default function RootLayout() {
             <Stack.Screen name='profileScreen' options={{ headerShown: false }} />
             <Stack.Screen name='RefundPolicy' options={{ headerShown: false }} />
             <Stack.Screen name='ContactUs' options={{ headerShown: false }} />
-            <Stack.Screen name='ContactUs2' options={{ headerShown: false }} />
+            <Stack.Screen name='ContacAgent' options={{ headerShown: false }} />
+            <Stack.Screen name='ContactSuccess' options={{ headerShown: false }} />
+            <Stack.Screen name='Messages' options={{ headerShown: false }} />
+            <Stack.Screen name='ChatDetail' options={{ headerShown: false }} />
           </Stack>
         </KeyboardAvoidingView>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

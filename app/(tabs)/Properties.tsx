@@ -1,508 +1,286 @@
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import {
-    deleteProperty,
-    getPropertyById,
-    searchProperties,
-    SearchPropertiesParams,
-    updateProperty
-} from '@/store/slices/propertiesSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Toast from 'react-native-toast-message';
+import React, { useState } from 'react';
+import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export default function PropertiesPage() {
-    const dispatch = useAppDispatch();
-    const { properties, isLoading } = useAppSelector((state) => state.properties);
-    const [filters, setFilters] = useState<SearchPropertiesParams>({
-        name: '',
-        price: 0,
-        size: '',
-        status: undefined,
-        page: 1,
-        limit: 10,
-    });
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [updateModalVisible, setUpdateModalVisible] = useState(false);
-    const [filterModalVisible, setFilterModalVisible] = useState(false);
-    const [selectedProperty, setSelectedProperty] = useState<any>(null);
-    const [formData, setFormData] = useState({
-        price: '',
-        status: '',
-        bedrooms: '',
-        bathroom: '',
-        size: '',
-        parking: '',
-    });
-
-
-    useEffect(() => {
-        const fetchProperties = async () => {
-            try {
-                await dispatch(searchProperties({ page: 1, limit: 10 })).unwrap();
-            } catch (error) {
-                console.error("Failed to fetch properties", error);
-            }
-        };
-
-        fetchProperties();
-    }, [dispatch]);
-
-    useEffect(() => {
-        const delaySearch = setTimeout(() => {
-            handleSearch();
-        }, 500); // Debounce search by 500ms
-
-        return () => clearTimeout(delaySearch);
-    }, [filters]);
-
-    const loadProperties = async () => {
-        try {
-            await dispatch(searchProperties(filters)).unwrap();
-        } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Load Properties',
-                text2: error || 'Please try again',
-            });
-        }
-    };
-
-    const handleSearch = async () => {
-        try {
-            const params: any = {};
-            if (filters.name) params.name = filters.name;
-            if (filters.price) params.price = Number(filters.price);
-            if (filters.size) params.size = filters.size;
-            if (filters.status) params.status = filters.status;
-            if (filters.page) params.page = filters.page;
-            if (filters.limit) params.limit = filters.limit;
-
-            await dispatch(searchProperties(params)).unwrap();
-        } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Search Failed',
-                text2: error || 'Please try again',
-            });
-        }
-    };
-
-    const handleCreateProperty = () => router.push('/newListing');
-
-    const handleUpdateProperty = async () => {
-        try {
-            const updateData: any = { id: selectedProperty.propertyId };
-
-            if (formData.price) updateData.price = Number(formData.price);
-            if (formData.status) updateData.status = formData.status;
-            if (formData.bedrooms) updateData.bedrooms = Number(formData.bedrooms);
-            if (formData.bathroom) updateData.bathroom = Number(formData.bathroom);
-            if (formData.size) updateData.size = formData.size;
-            if (formData.parking) updateData.parking = Number(formData.parking);
-
-            const result = await dispatch(updateProperty(updateData)).unwrap();
-
-            Toast.show({
-                type: 'success',
-                text1: 'Property Updated',
-                text2: result?.responseMessage || 'Property updated successfully',
-            });
-            setUpdateModalVisible(false);
-            loadProperties();
-        } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Update Property',
-                text2: error || 'Please try again',
-            });
-        }
-    };
-
-    const handleDeleteProperty = async (propertyId: string) => {
-        try {
-            const result = await dispatch(deleteProperty(propertyId)).unwrap();
-            Toast.show({
-                type: 'success',
-                text1: 'Property Deleted',
-                text2: result?.responseMessage || 'Property deleted successfully',
-            });
-            loadProperties();
-        } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Delete Property',
-                text2: error || 'Please try again',
-            });
-        }
-    };
-
-    const handleViewProperty = async (propertyId: string) => {
-        try {
-            const result = await dispatch(getPropertyById(propertyId)).unwrap();
-            console.log('Property details:', result);
-        } catch (error: any) {
-            Toast.show({
-                type: 'error',
-                text1: 'Failed to Load Property',
-                text2: error || 'Please try again',
-            });
-        }
-    };
-
-    // 🔹 Extract property array safely from API shape
-    const propertyList = properties || [];
-
-    const renderPropertyItem = ({ item }: { item: any }) => (
-        <View style={styles.propertyCard}>
-            <View style={styles.propertyInfo}>
-                <Text style={styles.propertyTitle}>{item.name}</Text>
-                <Text style={styles.propertyDescription} numberOfLines={2}>
-                    {item.description}
-                </Text>
-                <View style={styles.propertyDetails}>
-                    <Text style={styles.propertyPrice}>₦{item.price?.toLocaleString()}</Text>
-                    <Text style={styles.propertyLocation}>{item.address}</Text>
-                </View>
-                {(item.bedrooms || item.bathroom) && (
-                    <Text style={styles.propertySpecs}>
-                        {item.bedrooms && `${item.bedrooms} bed `}
-                        {item.bathroom && `• ${item.bathroom} bath `}
-                        {item.size && `• ${item.size} m² `}
-                        {item.parking && `• ${item.parking} parking`}
-                    </Text>
-                )}
-                <View style={styles.propertyStatus}>
-                    <Text style={[
-                        styles.statusBadge,
-                        item.status === 'AVAILABLE' && styles.statusAvailable,
-                        item.status === 'SOLD' && styles.statusSold,
-                        item.status === 'RENTED' && styles.statusRented,
-                    ]}>
-                        {item.status}
-                    </Text>
+// Property Card Component
+const PropertyCard = ({ title, location, beds, baths, sqft, status, price, image, type }: any) => (
+    <View style={propertyStyles.card}>
+        <View style={propertyStyles.imageContainer}>
+            <Image
+                source={{ uri: image }}
+                style={propertyStyles.image}
+            />
+            <View style={propertyStyles.typeTag}>
+                <Text style={propertyStyles.typeText}>{type}</Text>
+            </View>
+            <TouchableOpacity style={propertyStyles.favoriteButton}>
+                <Ionicons name="heart" size={24} color="#DD7800" />
+            </TouchableOpacity>
+        </View>
+        <View style={propertyStyles.content}>
+            <View style={propertyStyles.priceRow}>
+                <Text style={propertyStyles.price}>{price}</Text>
+                <View style={propertyStyles.locationRow}>
+                    <Ionicons name="location-sharp" size={16} color="#666" />
+                    <Text style={propertyStyles.locationText}>{location}</Text>
                 </View>
             </View>
-            <View style={styles.propertyActions}>
+            <View style={propertyStyles.detailsRow}>
+                <Text style={propertyStyles.detailsText}>{beds} beds</Text>
+                <Text style={propertyStyles.separator}>|</Text>
+                <Text style={propertyStyles.detailsText}>{baths} bath</Text>
+                <Text style={propertyStyles.separator}>|</Text>
+                <Text style={propertyStyles.detailsText}>{sqft} sqft - {status}</Text>
+            </View>
+            <Text style={propertyStyles.address}>{title}</Text>
+
+            {/* Action Buttons */}
+            <View style={propertyStyles.buttonRow}>
                 <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => {
-                        setSelectedProperty(item);
-                        setUpdateModalVisible(true);
-                    }}
-                // onPress={() => handleViewProperty(item.propertyId)}
+                    style={propertyStyles.viewDetailsButton}
+                    onPress={() => router.push('/PropertyDetails')}
                 >
-                    <Ionicons name="eye" size={20} color="#DD7800" />
+                    <Text style={propertyStyles.viewDetailsText}>View details</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => {
-                        setSelectedProperty(item);
-                        setFormData({
-                            price: item.price?.toString() || '',
-                            status: item.status || '',
-                            bedrooms: item.bedrooms?.toString() || '',
-                            bathroom: item.bathroom?.toString() || '',
-                            size: item.size || '',
-                            parking: item.parking?.toString() || '',
-                        });
-                        setUpdateModalVisible(true);
-                    }}
+                    style={propertyStyles.proceedButton}
+                    onPress={() => router.push('/paymentPage')}
                 >
-                    <Ionicons name="pencil" size={20} color="#007AFF" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => handleDeleteProperty(item.propertyId)}
-                >
-                    <Ionicons name="trash" size={20} color="#FF3B30" />
+                    <Text style={propertyStyles.proceedText}>Proceed To Pay</Text>
                 </TouchableOpacity>
             </View>
         </View>
-    );
+    </View>
+);
+
+const propertyStyles = StyleSheet.create({
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+        overflow: 'hidden',
+    },
+    imageContainer: {
+        position: 'relative',
+        width: '100%',
+        height: 250,
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+    },
+    typeTag: {
+        position: 'absolute',
+        top: 16,
+        left: 16,
+        backgroundColor: '#DD7800',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    typeText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#fff',
+    },
+    favoriteButton: {
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        backgroundColor: '#fff',
+        borderRadius: 25,
+        width: 50,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    content: {
+        padding: 16,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    price: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1a1a1a',
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    locationText: {
+        fontSize: 14,
+        color: '#666',
+        marginLeft: 4,
+    },
+    detailsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    detailsText: {
+        fontSize: 14,
+        color: '#888',
+    },
+    separator: {
+        fontSize: 14,
+        color: '#ddd',
+        marginHorizontal: 8,
+    },
+    address: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 4,
+        marginBottom: 16,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    viewDetailsButton: {
+        flex: 1,
+        borderWidth: 1.5,
+        borderColor: '#DD7800',
+        borderRadius: 30,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    viewDetailsText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#DD7800',
+    },
+    proceedButton: {
+        flex: 1,
+        backgroundColor: '#DD7800',
+        borderRadius: 30,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    proceedText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#fff',
+    },
+});
+
+export default function PropertiesPage() {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState('want to buy');
+
+    const properties = [
+        {
+            title: '12345 Idris adamu yobe way, kano state',
+            location: 'Kano state Nigeria',
+            type: 'Apartment',
+            beds: 3,
+            baths: 1,
+            sqft: '1,234',
+            status: 'Active',
+            price: '$450,999',
+            image: 'https://placehold.co/600x400/e0e0e0/555?text=Property+1'
+        },
+    ];
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            {/* Header */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Properties</Text>
-                <TouchableOpacity onPress={handleCreateProperty}>
-                    <Ionicons name="add-circle" size={28} color="#DD7800" />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="chevron-back" size={28} color="#DD7800" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>My Properties</Text>
+                <TouchableOpacity style={styles.filterButton}>
+                    <Ionicons name="options-outline" size={24} color="#333" />
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.searchContainer}>
-                <View style={styles.searchBox}>
-                    <Ionicons name="search" size={20} color="#888" />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search properties..."
-                        value={searchQuery}
-                        onChangeText={(text) => {
-                            setSearchQuery(text);
-                            setFilters({ ...filters, name: text });
-                        }} onSubmitEditing={handleSearch}
-                    />
-                </View>
-                <TouchableOpacity style={styles.filterButton} onPress={() => setFilterModalVisible(true)}>
-                    <Ionicons name="options" size={24} color="#DD7800" />
-                </TouchableOpacity>
-            </View>
-
-            {isLoading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#DD7800" />
-                </View>
-            ) : (
-                <FlatList
-                    data={propertyList}
-                    renderItem={renderPropertyItem}
-                    keyExtractor={(item) => item.propertyId?.toString() || item.id?.toString() || Math.random().toString()}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="home-outline" size={64} color="#ccc" />
-                            <Text style={styles.emptyText}>No properties found</Text>
-                            <TouchableOpacity
-                                style={styles.createButton}
-                                onPress={handleCreateProperty}
-                            >
-                                <Text style={styles.createButtonText}>Create Property</Text>
-                            </TouchableOpacity>
-                        </View>
-                    }
-                />
-
-            )}
-
-            {/* Filter Modal */}
-            <Modal
-                visible={filterModalVisible}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setFilterModalVisible(false)}
+            <ScrollView
+                style={styles.scrollView}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 100 }}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Filter Properties</Text>
-                            <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#333" />
-                            </TouchableOpacity>
-                        </View>
+                <View style={styles.container}>
+                    {/* Search Bar */}
+                    <View style={styles.searchContainer}>
+                        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Search"
+                            placeholderTextColor="#888"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
+                    </View>
 
-                        <ScrollView style={styles.modalBody}>
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Maximum Price</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Enter maximum price"
-                                    value={filters.price?.toString() || ''}
-                                    onChangeText={(text) => setFilters({ ...filters, price: text ? Number(text) : 0 })}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Size</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Enter size (e.g., 100m²)"
-                                    value={filters.size || ''}
-                                    onChangeText={(text) => setFilters({ ...filters, size: text })}
-                                />
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Status</Text>
-                                <View style={styles.statusButtons}>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.statusButton,
-                                            !filters.status && styles.statusButtonActive
-                                        ]}
-                                        onPress={() => setFilters({ ...filters, status: undefined })}
-                                    >
-                                        <Text style={[
-                                            styles.statusButtonText,
-                                            !filters.status && styles.statusButtonTextActive
-                                        ]}>
-                                            ALL
-                                        </Text>
-                                    </TouchableOpacity>
-                                    {['AVAILABLE', 'SOLD'].map((status) => (
-                                        <TouchableOpacity
-                                            key={status}
-                                            style={[
-                                                styles.statusButton,
-                                                filters.status === status && styles.statusButtonActive
-                                            ]}
-                                            onPress={() => setFilters({ ...filters, status: status as any })}
-                                        >
-                                            <Text style={[
-                                                styles.statusButtonText,
-                                                filters.status === status && styles.statusButtonTextActive
-                                            ]}>
-                                                {status}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-                        </ScrollView>
-
-                        <View style={styles.modalFooter}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => {
-                                    setFilters({
-                                        name: '',
-                                        price: 0,
-                                        size: '',
-                                        status: undefined,
-                                        page: 1,
-                                        limit: 10,
-                                    });
-                                    setSearchQuery('');
-                                    setFilterModalVisible(false);
-                                }}
+                    {/* Tabs */}
+                    <View style={styles.tabsContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.tab,
+                                activeTab === 'want to buy' && styles.tabActive
+                            ]}
+                            onPress={() => setActiveTab('want to buy')}
+                        >
+                            <Text
+                                style={[
+                                    styles.tabText,
+                                    activeTab === 'want to buy' && styles.tabTextActive
+                                ]}
                             >
-                                <Text style={styles.cancelButtonText}>Clear All</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.updateButton}
-                                onPress={() => setFilterModalVisible(false)}
+                                want to buy
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.tab,
+                                activeTab === 'Purchased Properties' && styles.tabActive
+                            ]}
+                            onPress={() => setActiveTab('Purchased Properties')}
+                        >
+                            <Text
+                                style={[
+                                    styles.tabText,
+                                    activeTab === 'Purchased Properties' && styles.tabTextActive
+                                ]}
                             >
-                                <Text style={styles.updateButtonText}>Apply</Text>
-                            </TouchableOpacity>
-                        </View>
+                                Purchased Properties
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Property Cards */}
+                    <View style={styles.propertyList}>
+                        {properties.map((property, index) => (
+                            <PropertyCard key={index} {...property} />
+                        ))}
                     </View>
                 </View>
-            </Modal>
-
-            {/* Update Property Modal */}
-            <Modal
-                visible={updateModalVisible}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setUpdateModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Update Property</Text>
-                            <TouchableOpacity onPress={() => setUpdateModalVisible(false)}>
-                                <Ionicons name="close" size={24} color="#333" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView style={styles.modalBody}>
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Price</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Enter price"
-                                    value={formData.price}
-                                    onChangeText={(text) => setFormData({ ...formData, price: text })}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Status</Text>
-                                <View style={styles.statusButtons}>
-                                    {['AVAILABLE', 'SOLD'].map((status) => (
-                                        <TouchableOpacity
-                                            key={status}
-                                            style={[
-                                                styles.statusButton,
-                                                formData.status === status && styles.statusButtonActive
-                                            ]}
-                                            onPress={() => setFormData({ ...formData, status })}
-                                        >
-                                            <Text style={[
-                                                styles.statusButtonText,
-                                                formData.status === status && styles.statusButtonTextActive
-                                            ]}>
-                                                {status}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Bedrooms</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Number of bedrooms"
-                                    value={formData.bedrooms}
-                                    onChangeText={(text) => setFormData({ ...formData, bedrooms: text })}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Bathrooms</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Number of bathrooms"
-                                    value={formData.bathroom}
-                                    onChangeText={(text) => setFormData({ ...formData, bathroom: text })}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Size (m²)</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Property size"
-                                    value={formData.size}
-                                    onChangeText={(text) => setFormData({ ...formData, size: text })}
-                                />
-                            </View>
-
-                            <View style={styles.formGroup}>
-                                <Text style={styles.label}>Parking Spaces</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Number of parking spaces"
-                                    value={formData.parking}
-                                    onChangeText={(text) => setFormData({ ...formData, parking: text })}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-                        </ScrollView>
-
-                        <View style={styles.modalFooter}>
-                            <TouchableOpacity
-                                style={styles.cancelButton}
-                                onPress={() => setUpdateModalVisible(false)}
-                            >
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.updateButton}
-                                onPress={handleUpdateProperty}
-                            >
-                                <Text style={styles.updateButtonText}>Update</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
+            </ScrollView>
         </SafeAreaView>
     );
 }
-
 
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingTop: 40,
+        paddingTop: 25,
     },
     header: {
         flexDirection: 'row',
@@ -511,255 +289,75 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 16,
         backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#1a1a1a',
+    },
+    filterButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    scrollView: {
+        flex: 1,
+    },
+    container: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
         backgroundColor: '#fff',
-        gap: 12,
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
-    searchBox: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f5f5f5',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        height: 44,
+    searchIcon: {
+        marginRight: 12,
     },
     searchInput: {
         flex: 1,
-        marginLeft: 8,
+        height: 50,
         fontSize: 16,
         color: '#333',
     },
-    filterButton: {
-        padding: 8,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    listContent: {
-        padding: 20,
-        paddingBottom: 100,
-    },
-    propertyCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+    tabsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    propertyInfo: {
-        flex: 1,
-    },
-    propertyTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 4,
-    },
-    propertyDescription: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 8,
-    },
-    propertyDetails: {
-        marginBottom: 8,
-    },
-    propertyPrice: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#DD7800',
-        marginBottom: 4,
-    },
-    propertyLocation: {
-        fontSize: 14,
-        color: '#666',
-    },
-    propertySpecs: {
-        fontSize: 14,
-        color: '#888',
-        marginBottom: 8,
-    },
-    propertyStatus: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    statusBadge: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
-    },
-    statusAvailable: {
-        backgroundColor: '#E8F5E9',
-        color: '#4CAF50',
-    },
-    statusSold: {
-        backgroundColor: '#FFEBEE',
-        color: '#F44336',
-    },
-    statusRented: {
-        backgroundColor: '#E3F2FD',
-        color: '#2196F3',
-    },
-    typeBadge: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
-        backgroundColor: '#F5F5F5',
-        color: '#666',
-    },
-    propertyActions: {
-        justifyContent: 'center',
-        gap: 12,
-        marginLeft: 12,
-    },
-    actionButton: {
-        padding: 8,
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 60,
-    },
-    emptyText: {
-        fontSize: 18,
-        color: '#888',
-        marginTop: 16,
         marginBottom: 24,
+        gap: 16,
     },
-    createButton: {
-        backgroundColor: '#DD7800',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 12,
+    tab: {
+        paddingBottom: 8,
     },
-    createButtonText: {
-        color: '#fff',
+    tabActive: {
+        borderBottomWidth: 3,
+        borderBottomColor: '#DD7800',
+    },
+    tabText: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '500',
+        color: '#999',
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
+    tabTextActive: {
+        color: '#1a1a1a',
+        fontWeight: '600',
     },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        width: '90%',
-        maxHeight: '80%',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    modalBody: {
-        padding: 20,
-    },
-    formGroup: {
+    propertyList: {
         marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        color: '#333',
-    },
-    statusButtons: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    statusButton: {
-        flex: 1,
-        padding: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        alignItems: 'center',
-    },
-    statusButtonActive: {
-        backgroundColor: '#DD7800',
-        borderColor: '#DD7800',
-    },
-    statusButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#666',
-    },
-    statusButtonTextActive: {
-        color: '#fff',
-    },
-    modalFooter: {
-        flexDirection: 'row',
-        padding: 20,
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-        gap: 12,
-    },
-    cancelButton: {
-        flex: 1,
-        padding: 14,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        alignItems: 'center',
-    },
-    cancelButtonText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#666',
-    },
-    updateButton: {
-        flex: 1,
-        padding: 14,
-        borderRadius: 8,
-        backgroundColor: '#DD7800',
-        alignItems: 'center',
-    },
-    updateButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#fff',
     },
 });

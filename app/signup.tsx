@@ -119,7 +119,6 @@ export default function SignupPage() {
         } catch (error: any) {
             console.error('Signup error:', error);
 
-            // Extract meaningful error message
             let errorMessage = 'Something went wrong';
 
             if (typeof error === 'string') {
