@@ -1,4 +1,4 @@
-import { AGENT_AUTH_ENDPOINTS, BASE_URL, CSTOMER_AUTH_ENDPOINTS } from '@/constants/api';
+import { AGENT_AUTH_ENDPOINTS, BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -6,8 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
-// Property Card Component for Clients
-const ClientPropertyCard = ({ property }: any) => (
+// Property Card Component matching the design
+const AgentPropertyCard = ({ property, onViewDetails, onViewBuyer, isSold }: any) => (
     <View style={propertyStyles.card}>
         <View style={propertyStyles.imageContainer}>
             <Image
@@ -21,69 +21,18 @@ const ClientPropertyCard = ({ property }: any) => (
                 <Ionicons name="heart" size={24} color="#DD7800" />
             </TouchableOpacity>
         </View>
+
         <View style={propertyStyles.content}>
-            <View style={propertyStyles.priceRow}>
+            <View style={propertyStyles.priceLocationRow}>
                 <Text style={propertyStyles.price}>${property.price?.toLocaleString()}</Text>
                 <View style={propertyStyles.locationRow}>
-                    <Ionicons name="location-sharp" size={16} color="#666" />
+                    <Ionicons name="location" size={16} color="#666" />
                     <Text style={propertyStyles.locationText} numberOfLines={1}>
                         {property.address?.split(',').slice(-2).join(',').trim() || 'Location'}
                     </Text>
                 </View>
             </View>
-            <View style={propertyStyles.detailsRow}>
-                <Text style={propertyStyles.detailsText}>{property.bedrooms} beds</Text>
-                <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{property.bathroom} bath</Text>
-                <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{property.size?.toLocaleString()} sqft - {property.status}</Text>
-            </View>
-            <Text style={propertyStyles.address} numberOfLines={1}>{property.address}</Text>
 
-            {/* Action Buttons */}
-            <View style={propertyStyles.buttonRow}>
-                <TouchableOpacity
-                    style={propertyStyles.viewDetailsButton}
-                    onPress={() => router.push({ pathname: '/PropertyDetails', params: { propertyId: property.propertyId } })}
-                >
-                    <Text style={propertyStyles.viewDetailsText}>View details</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={propertyStyles.proceedButton}
-                    onPress={() => router.push('/paymentPage')}
-                >
-                    <Text style={propertyStyles.proceedText}>Proceed To Pay</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
-    </View>
-);
-
-// Property Card Component for Agents
-const AgentPropertyCard = ({ property, onViewBuyer, isSold }: any) => (
-    <View style={propertyStyles.card}>
-        <View style={propertyStyles.imageContainer}>
-            <Image
-                source={{ uri: property.propertyImageUrl || 'https://placehold.co/600x400/e0e0e0/555?text=Property' }}
-                style={propertyStyles.image}
-            />
-            <View style={propertyStyles.typeTag}>
-                <Text style={propertyStyles.typeText}>{property.status}</Text>
-            </View>
-            <TouchableOpacity style={propertyStyles.favoriteButton}>
-                <Ionicons name="heart" size={24} color="#DD7800" />
-            </TouchableOpacity>
-        </View>
-        <View style={propertyStyles.content}>
-            <View style={propertyStyles.priceRow}>
-                <Text style={propertyStyles.price}>${property.price?.toLocaleString()}</Text>
-                <View style={propertyStyles.locationRow}>
-                    <Ionicons name="location-sharp" size={16} color="#666" />
-                    <Text style={propertyStyles.locationText} numberOfLines={1}>
-                        {property.address?.split(',').slice(-2).join(',').trim() || 'Location'}
-                    </Text>
-                </View>
-            </View>
             <View style={propertyStyles.detailsRow}>
                 <Text style={propertyStyles.detailsText}>{property.bedrooms} beds</Text>
                 <Text style={propertyStyles.separator}>|</Text>
@@ -93,21 +42,22 @@ const AgentPropertyCard = ({ property, onViewBuyer, isSold }: any) => (
                     {property.size?.toLocaleString()} sqft - {property.available ? 'Active' : 'Inactive'}
                 </Text>
             </View>
+
             <Text style={propertyStyles.address} numberOfLines={1}>{property.address}</Text>
 
-            {/* Action Buttons for Agent */}
+            {/* Action Buttons */}
             <View style={propertyStyles.buttonRow}>
                 <TouchableOpacity
                     style={propertyStyles.viewDetailsButton}
-                    onPress={() => router.push({ pathname: '/PropertyDetails', params: { propertyId: property.propertyId } })}
+                    onPress={() => onViewDetails(property)}
                 >
                     <Text style={propertyStyles.viewDetailsText}>View details</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={propertyStyles.proceedButton}
+                    style={propertyStyles.viewBuyerButton}
                     onPress={() => onViewBuyer(property)}
                 >
-                    <Text style={propertyStyles.proceedText}>
+                    <Text style={propertyStyles.viewBuyerText}>
                         {isSold ? 'View Buyer' : 'View Buyer'}
                     </Text>
                 </TouchableOpacity>
@@ -170,7 +120,7 @@ const propertyStyles = StyleSheet.create({
     content: {
         padding: 16,
     },
-    priceRow: {
+    priceLocationRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -230,14 +180,14 @@ const propertyStyles = StyleSheet.create({
         fontWeight: '600',
         color: '#DD7800',
     },
-    proceedButton: {
+    viewBuyerButton: {
         flex: 1,
         backgroundColor: '#DD7800',
         borderRadius: 30,
         paddingVertical: 14,
         alignItems: 'center',
     },
-    proceedText: {
+    viewBuyerText: {
         fontSize: 15,
         fontWeight: '600',
         color: '#fff',
@@ -263,48 +213,27 @@ interface Property {
     deleted: boolean;
 }
 
-export default function PropertiesPage() {
+export default function AgentPropertiesPage() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState('');
-    const [properties, setProperties] = useState<Property[]>([]);
+    const [activeTab, setActiveTab] = useState('assigned');
+    const [assignedProperties, setAssignedProperties] = useState<Property[]>([]);
+    const [soldProperties, setSoldProperties] = useState<Property[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
-    const [userRole, setUserRole] = useState<'Agent' | 'Client' | null>(null);
 
-    // Load user role on mount
+    // Fetch properties on mount and when tab changes
     useEffect(() => {
-        const loadUserRole = async () => {
-            try {
-                const storedRole = await AsyncStorage.getItem('userRole');
-                const role = storedRole === 'Agent' ? 'Agent' : 'Client';
-                setUserRole(role);
-
-                // Set default tab based on role
-                if (role === 'Agent') {
-                    setActiveTab('assigned');
-                } else {
-                    setActiveTab('want to buy');
-                }
-            } catch (error) {
-                console.error('Error loading user role:', error);
-                setUserRole('Client');
-                setActiveTab('want to buy');
-            }
-        };
-
-        loadUserRole();
-    }, []);
-
-    // Fetch properties based on active tab
-    useEffect(() => {
-        // Only fetch if BOTH userRole is loaded AND activeTab is set
-        if (activeTab && userRole !== null) {
-            fetchProperties();
+        if (activeTab === 'assigned') {
+            fetchAssignedProperties();
+        } else {
+            fetchSoldProperties();
         }
-    }, [activeTab, userRole]);
+    }, [activeTab]);
 
     // Filter properties based on search query
     useEffect(() => {
+        const properties = activeTab === 'assigned' ? assignedProperties : soldProperties;
+
         if (searchQuery.trim() === '') {
             setFilteredProperties(properties);
         } else {
@@ -316,9 +245,9 @@ export default function PropertiesPage() {
             );
             setFilteredProperties(filtered);
         }
-    }, [searchQuery, properties]);
+    }, [searchQuery, assignedProperties, soldProperties, activeTab]);
 
-    const fetchProperties = async () => {
+    const fetchAssignedProperties = async () => {
         setIsLoading(true);
         try {
             const token = await AsyncStorage.getItem('authToken');
@@ -328,69 +257,38 @@ export default function PropertiesPage() {
                 throw new Error('Authentication token not found. Please login again.');
             }
 
-            let endpoint = '';
-            let headers: any = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            };
-
-            if (userRole === 'Agent') {
-                // Agent endpoints
-                let agentId = '';
-                if (userDataString) {
-                    try {
-                        const userData = JSON.parse(userDataString);
-                        agentId = userData.agentId || userData.userId || userData.id || '';
-                    } catch (e) {
-                        console.error('Failed to parse user data:', e);
-                    }
+            let agentId = '';
+            if (userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    agentId = userData.agentId || userData.userId || userData.id || '';
+                } catch (e) {
+                    console.error('Failed to parse user data:', e);
                 }
-
-                if (!agentId) {
-                    throw new Error('Agent ID not found. Please login again.');
-                }
-
-                if (activeTab === 'assigned') {
-                    endpoint = AGENT_AUTH_ENDPOINTS.PROPERTIES.replace('{agentId}', agentId);
-                } else if (activeTab === 'sold') {
-                    endpoint = AGENT_AUTH_ENDPOINTS.SOLD_PROPERTY.replace('{agentId}', agentId);
-                }
-            } else {
-                // Client endpoints
-                let emailOrPhone = '';
-                if (userDataString) {
-                    try {
-                        const userData = JSON.parse(userDataString);
-                        emailOrPhone = userData.email || userData.phoneNumber || userData.phone || '';
-                    } catch (e) {
-                        console.error('Failed to parse user data:', e);
-                    }
-                }
-
-                if (!emailOrPhone) {
-                    throw new Error('User email or phone not found. Please login again.');
-                }
-
-                const baseEndpoint = activeTab === 'want to buy'
-                    ? CSTOMER_AUTH_ENDPOINTS.CONTACTED_PROPERTY
-                    : CSTOMER_AUTH_ENDPOINTS.PURCHASED_PROPERTIES;
-
-                endpoint = `${baseEndpoint}?emailOrPhone=${encodeURIComponent(emailOrPhone)}`;
             }
 
-            console.log('Fetching properties from:', `${BASE_URL}${endpoint}`);
+            if (!agentId) {
+                throw new Error('Agent ID not found. Please login again.');
+            }
+
+            const endpoint = AGENT_AUTH_ENDPOINTS.PROPERTIES.replace('{agentId}', agentId);
+
+            console.log('Fetching assigned properties from:', `${BASE_URL}${endpoint}`);
 
             const response = await fetch(`${BASE_URL}${endpoint}`, {
                 method: 'GET',
-                headers,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
             });
 
-            console.log('Properties response status:', response.status);
+            console.log('Assigned properties response status:', response.status);
 
             let result;
             try {
                 result = await response.json();
-                console.log('Properties response:', result);
+                console.log('Assigned properties response:', result);
             } catch (parseError) {
                 console.error('Failed to parse response:', parseError);
                 throw new Error('Invalid server response');
@@ -402,20 +300,96 @@ export default function PropertiesPage() {
             }
 
             const propertiesData = result.responseData || [];
-            setProperties(propertiesData);
+            setAssignedProperties(propertiesData);
             setFilteredProperties(propertiesData);
         } catch (error: any) {
-            console.error('Fetch properties error:', error);
+            console.error('Fetch assigned properties error:', error);
             Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: error.message || 'Failed to load properties',
+                text2: error.message || 'Failed to load assigned properties',
             });
-            setProperties([]);
+            setAssignedProperties([]);
             setFilteredProperties([]);
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const fetchSoldProperties = async () => {
+        setIsLoading(true);
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            const userDataString = await AsyncStorage.getItem('userData');
+
+            if (!token) {
+                throw new Error('Authentication token not found. Please login again.');
+            }
+
+            let agentId = '';
+            if (userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    agentId = userData.agentId || userData.userId || userData.id || '';
+                } catch (e) {
+                    console.error('Failed to parse user data:', e);
+                }
+            }
+
+            if (!agentId) {
+                throw new Error('Agent ID not found. Please login again.');
+            }
+
+            const endpoint = AGENT_AUTH_ENDPOINTS.SOLD_PROPERTY.replace('{agentId}', agentId);
+
+            console.log('Fetching sold properties from:', `${BASE_URL}${endpoint}`);
+
+            const response = await fetch(`${BASE_URL}${endpoint}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            console.log('Sold properties response status:', response.status);
+
+            let result;
+            try {
+                result = await response.json();
+                console.log('Sold properties response:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
+
+            if (!response.ok || result.responseCode !== '00') {
+                const errorMessage = result?.responseMessage || result?.message || 'Failed to fetch sold properties';
+                throw new Error(errorMessage);
+            }
+
+            const propertiesData = result.responseData || [];
+            setSoldProperties(propertiesData);
+            setFilteredProperties(propertiesData);
+        } catch (error: any) {
+            console.error('Fetch sold properties error:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.message || 'Failed to load sold properties',
+            });
+            setSoldProperties([]);
+            setFilteredProperties([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleViewDetails = (property: Property) => {
+        router.push({
+            pathname: '/PropertyDetails',
+            params: { propertyId: property.propertyId }
+        });
     };
 
     const handleViewBuyer = (property: Property) => {
@@ -425,33 +399,7 @@ export default function PropertiesPage() {
             text2: `Opening buyer information for ${property.name}`,
         });
         // TODO: Navigate to buyer details page
-    };
-
-    // Get tabs based on user role
-    const getTabs = () => {
-        if (userRole === 'Agent') {
-            return [
-                { label: 'Assigned Properties', value: 'assigned' },
-                { label: 'Sold', value: 'sold' },
-            ];
-        } else {
-            return [
-                { label: 'want to buy', value: 'want to buy' },
-                { label: 'Purchased Properties', value: 'Purchased Properties' },
-            ];
-        }
-    };
-
-    const getEmptyMessage = () => {
-        if (userRole === 'Agent') {
-            return activeTab === 'assigned'
-                ? "You don't have any assigned properties yet"
-                : "You haven't sold any properties yet";
-        } else {
-            return activeTab === 'want to buy'
-                ? "You haven't contacted any properties yet"
-                : "You haven't purchased any properties yet";
-        }
+        // router.push({ pathname: '/BuyerDetails', params: { propertyId: property.propertyId } });
     };
 
     return (
@@ -487,25 +435,38 @@ export default function PropertiesPage() {
 
                     {/* Tabs */}
                     <View style={styles.tabsContainer}>
-                        {getTabs().map((tab) => (
-                            <TouchableOpacity
-                                key={tab.value}
+                        <TouchableOpacity
+                            style={[
+                                styles.tab,
+                                activeTab === 'assigned' && styles.tabActive
+                            ]}
+                            onPress={() => setActiveTab('assigned')}
+                        >
+                            <Text
                                 style={[
-                                    styles.tab,
-                                    activeTab === tab.value && styles.tabActive
+                                    styles.tabText,
+                                    activeTab === 'assigned' && styles.tabTextActive
                                 ]}
-                                onPress={() => setActiveTab(tab.value)}
                             >
-                                <Text
-                                    style={[
-                                        styles.tabText,
-                                        activeTab === tab.value && styles.tabTextActive
-                                    ]}
-                                >
-                                    {tab.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                                Assigned Properties
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.tab,
+                                activeTab === 'sold' && styles.tabActive
+                            ]}
+                            onPress={() => setActiveTab('sold')}
+                        >
+                            <Text
+                                style={[
+                                    styles.tabText,
+                                    activeTab === 'sold' && styles.tabTextActive
+                                ]}
+                            >
+                                Sold
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Property Cards */}
@@ -517,26 +478,22 @@ export default function PropertiesPage() {
                             </View>
                         ) : filteredProperties.length > 0 ? (
                             filteredProperties.map((property, index) => (
-                                userRole === 'Agent' ? (
-                                    <AgentPropertyCard
-                                        key={property.propertyId || index}
-                                        property={property}
-                                        onViewBuyer={handleViewBuyer}
-                                        isSold={activeTab === 'sold'}
-                                    />
-                                ) : (
-                                    <ClientPropertyCard
-                                        key={property.propertyId || index}
-                                        property={property}
-                                    />
-                                )
+                                <AgentPropertyCard
+                                    key={property.propertyId || index}
+                                    property={property}
+                                    onViewDetails={handleViewDetails}
+                                    onViewBuyer={handleViewBuyer}
+                                    isSold={activeTab === 'sold'}
+                                />
                             ))
                         ) : (
                             <View style={styles.emptyContainer}>
                                 <Ionicons name="home-outline" size={64} color="#ccc" />
                                 <Text style={styles.emptyText}>No properties found</Text>
                                 <Text style={styles.emptySubtext}>
-                                    {getEmptyMessage()}
+                                    {activeTab === 'assigned'
+                                        ? 'You don\'t have any assigned properties yet'
+                                        : 'You haven\'t sold any properties yet'}
                                 </Text>
                             </View>
                         )}
@@ -551,7 +508,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingTop: 30,
+        paddingTop: 25,
     },
     header: {
         flexDirection: 'row',

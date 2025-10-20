@@ -1,83 +1,146 @@
-import GradientButton from '@/components/GradientButton/GradientButton';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { FlatList, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export default function PropertyLocationPage() {
-    const [location, setLocation] = useState({
-        address: 'Muhammadu Buhari Way, Potiskum......',
-        latitude: 11.724379,
-        longitude: 11.058379,
-    });
+interface Property {
+    id: string;
+    status: string;
+    address: string;
+    beds: number;
+    baths: number;
+    sqft: number;
+    image: string;
+}
 
-    const handleUseCurrentLocation = () => {
-        // This is where you would implement logic to get the user's current location
-        // using Expo Location services and update the state.
-        console.log('Fetching current location...');
-    };
+export default function MyPropertiesPage() {
+    const [activeTab, setActiveTab] = useState<'want' | 'purchased'>('want');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const initialRegion = {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-    };
+    // Sample data - replace with actual data from your API
+    const properties: Property[] = [
+        {
+            id: '1',
+            status: 'In Process',
+            address: '123 Mable Street',
+            beds: 3,
+            baths: 2,
+            sqft: 15000,
+            image: 'https://placehold.co/150x120/e0e0e0/555?text=Property'
+        },
+        {
+            id: '2',
+            status: 'In process',
+            address: '123 Mable Street',
+            beds: 3,
+            baths: 2,
+            sqft: 15000,
+            image: 'https://placehold.co/150x120/e0e0e0/555?text=Property'
+        },
+        {
+            id: '3',
+            status: 'In Process',
+            address: '123 Mable Street',
+            beds: 3,
+            baths: 2,
+            sqft: 15000,
+            image: 'https://placehold.co/150x120/e0e0e0/555?text=Property'
+        },
+        {
+            id: '4',
+            status: 'In Process',
+            address: '123 Mable Street',
+            beds: 3,
+            baths: 2,
+            sqft: 15000,
+            image: 'https://placehold.co/150x120/e0e0e0/555?text=Property'
+        },
+        {
+            id: '5',
+            status: 'In Process',
+            address: '123 Mable Street',
+            beds: 3,
+            baths: 2,
+            sqft: 15000,
+            image: 'https://placehold.co/150x120/e0e0e0/555?text=Property'
+        },
+        {
+            id: '6',
+            status: 'In Process',
+            address: '123 Mable Street',
+            beds: 3,
+            baths: 2,
+            sqft: 15000,
+            image: 'https://placehold.co/150x120/e0e0e0/555?text=Property'
+        },
+    ];
+
+    const renderPropertyCard = ({ item }: { item: Property }) => (
+        <TouchableOpacity style={styles.propertyCard} onPress={() => router.push('/PropertyDetails')}>
+            <View style={styles.propertyInfo}>
+                <Text style={styles.statusText}>{item.status}</Text>
+                <Text style={styles.addressText}>{item.address}</Text>
+                <Text style={styles.detailsText}>
+                    {item.beds} Beds, {item.baths} Bath, {item.sqft} sq ft
+                </Text>
+            </View>
+            <Image source={{ uri: item.image }} style={styles.propertyImage} />
+        </TouchableOpacity>
+    );
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#ffa500" />
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="chevron-back" size={28} color="#DD7800" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Property</Text>
-                <View style={{ width: 24 }} />
+                <Text style={styles.headerTitle}>My Properties</Text>
+                <TouchableOpacity style={styles.filterButton}>
+                    <Ionicons name="options-outline" size={28} color="#333" />
+                </TouchableOpacity>
             </View>
 
-            <View style={styles.contentContainer}>
-                {/* Map Section */}
-                <View style={styles.mapContainer}>
-                    <MapView
-                        style={styles.map}
-                        initialRegion={initialRegion}
-                    >
-                        <Marker
-                            coordinate={{
-                                latitude: location.latitude,
-                                longitude: location.longitude
-                            }}
-                            title="Property Location"
-                        />
-                    </MapView>
-                </View>
-
-                {/* Use Current Location Button */}
-                <TouchableOpacity style={styles.locationButton} onPress={handleUseCurrentLocation}>
-                    <Ionicons name="locate-outline" size={20} color="#fff" />
-                    <Text style={styles.locationButtonText}>Use my current location</Text>
-                </TouchableOpacity>
-
-                {/* Address and Coordinates */}
-                <View style={styles.infoContainer}>
-                    <Text style={styles.infoTitle}>Address</Text>
-                    <Text style={styles.addressText}>{location.address}</Text>
-
-                    <View style={styles.coordinatesContainer}>
-                        <View style={styles.coordinateBox}>
-                            <Text style={styles.coordinateLabel}>Latitude</Text>
-                            <Text style={styles.coordinateValue}>{location.latitude}</Text>
-                        </View>
-                        <View style={styles.coordinateBox}>
-                            <Text style={styles.coordinateLabel}>Longitude</Text>
-                            <Text style={styles.coordinateValue}>{location.longitude}</Text>
-                        </View>
-                    </View>
-                </View>
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search"
+                    placeholderTextColor="#999"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
             </View>
 
-            {/* Back Button */}
-            <GradientButton title='Back' onPress={() => router.push('/Properties')} />
+            {/* Tabs */}
+            <View style={styles.tabsContainer}>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'want' && styles.activeTab]}
+                    onPress={() => setActiveTab('want')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'want' && styles.activeTabText]}>
+                        want to buy
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'purchased' && styles.activeTab]}
+                    onPress={() => setActiveTab('purchased')}
+                >
+                    <Text style={[styles.tabText, activeTab === 'purchased' && styles.activeTabText]}>
+                        Purchased Properties
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Property List */}
+            <FlatList
+                data={properties}
+                renderItem={renderPropertyCard}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContainer}
+                showsVerticalScrollIndicator={false}
+            />
         </SafeAreaView>
     );
 }
@@ -85,120 +148,116 @@ export default function PropertyLocationPage() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: 'white',
-        paddingTop: 50,
-        paddingHorizontal: 10
+        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        paddingTop: 50,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
     },
     headerTitle: {
         fontSize: 20,
         fontWeight: 'bold',
+        color: '#1a1a1a',
     },
-    contentContainer: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: '#fff',
-    },
-    mapContainer: {
-        height: 300,
-        width: '100%',
-        borderRadius: 16,
-        overflow: 'hidden',
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    map: {
-        width: '100%',
-        height: '100%',
-    },
-    locationButton: {
-        flexDirection: 'row',
+    filterButton: {
+        width: 40,
+        height: 40,
         justifyContent: 'center',
+        alignItems: 'flex-end',
+    },
+    searchContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#ffa500',
+        backgroundColor: '#f5f5f5',
         borderRadius: 12,
-        paddingVertical: 12,
+        marginHorizontal: 20,
+        marginTop: 16,
         marginBottom: 20,
+        paddingHorizontal: 16,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        height: 48,
+        fontSize: 16,
+        color: '#333',
+    },
+    tabsContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        marginBottom: 20,
+        gap: 16,
+    },
+    tab: {
+        paddingBottom: 8,
+    },
+    activeTab: {
+        borderBottomWidth: 3,
+        borderBottomColor: '#DD7800',
+    },
+    tabText: {
+        fontSize: 16,
+        color: '#999',
+        fontWeight: '500',
+    },
+    activeTabText: {
+        color: '#1a1a1a',
+        fontWeight: 'bold',
+    },
+    listContainer: {
+        paddingHorizontal: 20,
+        paddingBottom: 100,
+    },
+    propertyCard: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
         elevation: 3,
+        borderWidth: 1,
+        borderColor: '#f0f0f0',
     },
-    locationButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 10,
+    propertyInfo: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingRight: 12,
     },
-    infoContainer: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 20,
-    },
-    infoTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+    statusText: {
+        fontSize: 14,
+        color: '#DD7800',
+        fontWeight: '600',
         marginBottom: 8,
     },
     addressText: {
-        fontSize: 14,
-        color: '#555',
-        marginBottom: 16,
-    },
-    coordinatesContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    coordinateBox: {
-        flex: 1,
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 12,
-        alignItems: 'center',
-        marginHorizontal: 4,
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    coordinateLabel: {
-        fontSize: 12,
-        color: '#888',
-    },
-    coordinateValue: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#ffa500',
+        color: '#1a1a1a',
+        marginBottom: 8,
     },
-    backButton: {
-        height: 50,
-        borderRadius: 25,
-        marginHorizontal: 16,
-        marginBottom: 20,
-        marginTop: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 6,
+    detailsText: {
+        fontSize: 13,
+        color: '#888',
     },
-    backButtonGradient: {
-        flex: 1,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    backButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+    propertyImage: {
+        width: 120,
+        height: 90,
+        borderRadius: 12,
     },
 });

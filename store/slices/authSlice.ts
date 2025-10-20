@@ -18,6 +18,7 @@ export interface SignupData {
 export interface LoginData {
   emailOrPhoneNumber: string;
   password: string;
+  role?: 'AGENT' | 'CUSTOMER';
 }
 
 export interface OTPValidation {
@@ -33,6 +34,7 @@ interface AuthState {
   error: string | null;
   isAuthenticated: boolean;
   pendingVerificationEmail: string | null;
+  userRole: 'Agent' | 'Client' | null;
 }
 
 const initialState: AuthState = {
@@ -42,6 +44,7 @@ const initialState: AuthState = {
   error: null,
   isAuthenticated: false,
   pendingVerificationEmail: null,
+  userRole: null,
 };
 
 // Async Thunks
@@ -89,16 +92,39 @@ export const login = createAsyncThunk(
   'auth/login',
   async (data: LoginData, { rejectWithValue }) => {
     try {
+      console.log('Login attempt:', { role: data.role, emailOrPhoneNumber: data.emailOrPhoneNumber });
+
       const response = await fetch(`${BASE_URL}${AUTH_ENDPOINTS.LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          emailOrPhoneNumber: data.emailOrPhoneNumber,
+          password: data.password,
+          role: data.role || 'Client', // Send role to backend
+        }),
       });
 
-      const result = await response.json();
-      console.log("Token response in a store", result);
+      console.log('Login response status:', response.status);
+
+      // Check if response is empty
+      const text = await response.text();
+      console.log('Login response text:', text);
+
+      if (!text) {
+        return rejectWithValue('Empty response from server');
+      }
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        return rejectWithValue('Invalid response from server');
+      }
+
+      console.log("Login response:", result);
 
       if (result.responseCode !== "00") {
         return rejectWithValue(result.responseMessage || 'Login failed');
@@ -106,13 +132,34 @@ export const login = createAsyncThunk(
 
       // Store token in AsyncStorage
       const resultData: any = result.responseData;
-      console.log("Token single>>>>>>>>>>>>", resultData.token)
+      console.log("Token:", resultData.token)
       if (resultData?.token) {
         await AsyncStorage.setItem('authToken', resultData.token);
       }
 
-      return result;
+      // Store user role in AsyncStorage - Map backend role to UI role
+      if (data.role) {
+        const uiRole = data.role === 'AGENT' ? 'Agent' : 'Client';
+        await AsyncStorage.setItem('userRole', uiRole);
+      }
+
+      // Store user data in AsyncStorage (for API calls that need email/phone)
+      const userData = {
+        email: resultData?.user?.email || resultData?.email || data.emailOrPhoneNumber,
+        phoneNumber: resultData?.user?.phoneNumber || resultData?.phoneNumber || data.emailOrPhoneNumber,
+        agentId: resultData?.user?.agentId || resultData?.agentId || resultData?.userId || resultData?.user?.id || resultData?.id,
+        customerId: resultData?.user?.customerId || resultData?.customerId || resultData?.userId || resultData?.user?.id || resultData?.id,
+        ...resultData?.user,
+        ...resultData
+      };
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      console.log('User data stored:', userData);
+
+      // Map backend role to UI role for Redux store
+      const uiRole = data.role === 'AGENT' ? 'Agent' : 'Client';
+      return { ...result, role: uiRole };
     } catch (error: any) {
+      console.error('Login error:', error);
       return rejectWithValue(error.message || 'Network error');
     }
   }
@@ -120,22 +167,15 @@ export const login = createAsyncThunk(
 
 export const sendOTP = createAsyncThunk(
   'auth/sendOTP',
-  async (email: string, { rejectWithValue, getState }) => {
+  async (email: string, { rejectWithValue }) => {
     try {
-      const state = getState() as any;
-      const token = state.auth.token;
-
       const url = `${BASE_URL}${AUTH_ENDPOINTS.SEND_OTP}?email=${encodeURIComponent(email)}`;
       console.log('SendOTP request:', url);
-      console.log('Using token:', token ? 'Token present' : 'No token');
 
+      // Don't send token for OTP - it's for new user verification
       const headers: any = {
         'Content-Type': 'application/json',
       };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const response = await fetch(url, {
         method: 'GET',
@@ -209,6 +249,8 @@ export const validateOTP = createAsyncThunk(
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   await AsyncStorage.removeItem('authToken');
+  await AsyncStorage.removeItem('userRole');
+  await AsyncStorage.removeItem('userData');
 });
 
 // Auth Slice
@@ -225,6 +267,14 @@ const authSlice = createSlice({
     },
     setPendingVerificationEmail: (state, action: PayloadAction<string>) => {
       state.pendingVerificationEmail = action.payload;
+    },
+    setUserRole: (state, action: PayloadAction<'Agent' | 'Client'>) => {
+      state.userRole = action.payload;
+    },
+    restoreAuth: (state, action: PayloadAction<{ token: string; userRole: 'Agent' | 'Client' }>) => {
+      state.token = action.payload.token;
+      state.userRole = action.payload.userRole;
+      state.isAuthenticated = true;
     },
   },
   extraReducers: (builder) => {
@@ -262,6 +312,7 @@ const authSlice = createSlice({
       state.user = resultData?.user || null;
       state.token = resultData?.token || null;
       state.isAuthenticated = !!resultData?.token;
+      state.userRole = action.payload?.role || null;
     });
 
     builder.addCase(login.rejected, (state, action) => {
@@ -300,9 +351,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.userRole = null;
     });
   },
 });
 
-export const { clearError, setToken, setPendingVerificationEmail } = authSlice.actions;
+export const { clearError, setToken, setPendingVerificationEmail, setUserRole, restoreAuth } = authSlice.actions;
 export default authSlice.reducer;

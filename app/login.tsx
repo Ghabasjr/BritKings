@@ -3,19 +3,27 @@ import GradientButton from '@/components/GradientButton/GradientButton';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
-
 export default function LoginPage() {
+    const [loginType, setLoginType] = useState<'Agent' | 'Client'>('Agent');
     const [emailOrPhoneNumber, setEmailOrPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
 
     const dispatch = useAppDispatch();
     const { isLoading } = useAppSelector((state) => state.auth);
+
+    // Clear form when switching login types
+    const handleLoginTypeChange = (type: 'Agent' | 'Client') => {
+        setLoginType(type);
+        setEmailOrPhoneNumber('');
+        setPassword('');
+    };
 
     const handleLogin = async () => {
         if (!emailOrPhoneNumber || !password) {
@@ -28,7 +36,25 @@ export default function LoginPage() {
         }
 
         try {
-            const result = await dispatch(login({ emailOrPhoneNumber, password })).unwrap();
+            // Map UI loginType to backend role
+            const role = loginType === 'Agent' ? 'AGENT' : 'CUSTOMER';
+            const result = await dispatch(login({
+                emailOrPhoneNumber,
+                password,
+                role
+            })).unwrap();
+
+            const userData = result?.responseData;
+            console.log("User data", userData);
+            if (!userData) {
+                throw new Error('Invalid user data received');
+            }
+
+            await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+            if (userData.token) {
+                await AsyncStorage.setItem('authToken', userData.token);
+            }
 
             Toast.show({
                 type: 'success',
@@ -36,8 +62,13 @@ export default function LoginPage() {
                 text2: 'Welcome back!',
             });
 
-            // Navigate to home after successful login
-            router.replace('/(tabs)');
+            // Navigate to the correct dashboard based on role
+            if (loginType === 'Agent') {
+                // console.log("user data stored:", userData)
+                router.replace('/(tabs)/agentIndex');
+            } else {
+                router.replace('/(tabs)');
+            }
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -47,15 +78,18 @@ export default function LoginPage() {
         }
     };
 
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <ScrollView
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.container}>
                         {/* Logo Section */}
@@ -66,12 +100,49 @@ export default function LoginPage() {
                         />
                         <Text style={styles.welcomeText}>Welcome Back, To Britking</Text>
 
+                        {/* Login Type Toggle */}
+                        <View style={styles.toggleContainer}>
+                            <TouchableOpacity
+                                style={[
+                                    styles.toggleButton,
+                                    loginType === 'Agent' && styles.toggleButtonActive
+                                ]}
+                                onPress={() => handleLoginTypeChange('Agent')}
+                            >
+                                <Text style={[
+                                    styles.toggleText,
+                                    loginType === 'Agent' && styles.toggleTextActive
+                                ]}>
+                                    Agent
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.toggleButton,
+                                    loginType === 'Client' && styles.toggleButtonActive
+                                ]}
+                                onPress={() => handleLoginTypeChange('Client')}
+                            >
+                                <Text style={[
+                                    styles.toggleText,
+                                    loginType === 'Client' && styles.toggleTextActive
+                                ]}>
+                                    Buyer
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Form Title */}
+                        <Text style={styles.formTitle}>
+                            {loginType === 'Agent' ? 'Agent Login' : 'Buyer Login'}
+                        </Text>
+
                         {/* Form Section */}
                         <View >
                             <CustomInput
-                                placeholder="Email/Phone"
+                                placeholder={loginType === 'Agent' ? "Email/Username" : "Email/Phone"}
                                 placeholderTextColor="#888"
-                                keyboardType="email-address"
+                                keyboardType={loginType === 'Agent' ? "default" : "email-address"}
                                 autoCapitalize="none"
                                 value={emailOrPhoneNumber}
                                 onChangeText={setEmailOrPhoneNumber}
@@ -95,7 +166,7 @@ export default function LoginPage() {
                                     />
                                 </TouchableOpacity>
                             </View>
-                            <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
+                            <TouchableOpacity onPress={() => router.push('/changePassword')}>
                                 <Text style={styles.forgotPasswordText}>Can't remember your password?</Text>
                             </TouchableOpacity>
 
@@ -110,20 +181,24 @@ export default function LoginPage() {
                                 />
                             )}
 
-                            <View style={styles.account}>
-                                <Text>
-                                    Don't have an account?
-                                </Text>
-                                <TouchableOpacity onPress={() => router.push('/signup')}>
-                                    <Text style={styles.signupText}>Sign Up</Text>
-                                </TouchableOpacity>
-                            </View>
+                            {loginType === 'Client' && (
+                                <View style={styles.account}>
+                                    <Text>
+                                        Don't have an account?
+                                    </Text>
+                                    <TouchableOpacity onPress={() => router.push('/signup')}>
+                                        <Text style={styles.signupText}>Sign Up</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
 
                         {/* Biometric Login */}
-                        <TouchableOpacity style={styles.biometricButton} onPress={() => console.log('Biometric login pressed')}>
-                            <Text style={styles.biometricText}>Biometric Login</Text>
-                        </TouchableOpacity>
+                        {loginType === 'Client' && (
+                            <TouchableOpacity style={styles.biometricButton} onPress={() => console.log('Biometric login pressed')}>
+                                <Text style={styles.biometricText}>Biometric Login</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -135,11 +210,12 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingTop: 20,
+        paddingTop: 30,
     },
     container: {
         flex: 1,
         paddingHorizontal: 20,
+        paddingBottom: 30,
         justifyContent: 'center',
     },
     logo: {
@@ -151,7 +227,6 @@ const styles = StyleSheet.create({
     account: {
         display: 'flex',
         flexDirection: 'row',
-        // alignItems: 'center',
         justifyContent: 'center',
         gap: 6
     },
@@ -159,13 +234,47 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         fontSize: 20,
         color: '#070505ff',
-        marginBottom: 40,
+        marginBottom: 30,
+    },
+    toggleContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderRadius: 25,
+        padding: 4,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    formTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#DD7800',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    toggleButton: {
+        flex: 1,
+        paddingVertical: 12,
+        alignItems: 'center',
+        borderRadius: 22,
+    },
+    toggleButtonActive: {
+        backgroundColor: '#DD7800',
+    },
+    toggleText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#666',
+    },
+    toggleTextActive: {
+        color: '#fff',
     },
     formContainer: {
         width: '100%',
-        // backgroundColor: '#362f2f',
     },
-
     forgotPasswordText: {
         textAlign: 'right',
         color: '#DD7800',
@@ -182,8 +291,6 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 6,
     },
-
-
     signupText: {
         textAlign: 'center',
         fontSize: 14,
