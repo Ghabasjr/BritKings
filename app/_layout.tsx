@@ -42,10 +42,7 @@ export default function RootLayout() {
               userRole: userRole as 'Agent' | 'Client'
             }));
 
-            console.log('Auth restored - Token:', authToken ? 'Present' : 'Missing', 'Role:', userRole);
 
-            // User is authenticated, go to main app
-            router.replace('/(tabs)');
           } else {
             // User is not authenticated, go to login
             router.replace('/login');
@@ -97,7 +94,7 @@ export default function RootLayout() {
             <Stack.Screen name='Tasks' options={{ headerShown: false }} />
             <Stack.Screen name='newListing' options={{ headerShown: false }} />
             <Stack.Screen name='PropertyDetails' options={{ headerShown: false }} />
-            <Stack.Screen name='PerformanceScreen' options={{ headerShown: false }} />
+            {/* <Stack.Screen name='PerformanceScreen' options={{ headerShown: false }} /> */}
             <Stack.Screen name='AchievedStaff' options={{ headerShown: false }} />
             <Stack.Screen name='Transactions' options={{ headerShown: false }} />
             <Stack.Screen name='profileScreen' options={{ headerShown: false }} />

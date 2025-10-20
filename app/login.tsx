@@ -3,13 +3,14 @@ import GradientButton from '@/components/GradientButton/GradientButton';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { login } from '@/store/slices/authSlice';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 export default function LoginPage() {
-    const [loginType, setLoginType] = useState<'Agent' | 'Buyer'>('Agent');
+    const [loginType, setLoginType] = useState<'Agent' | 'Client'>('Agent');
     const [emailOrPhoneNumber, setEmailOrPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +19,7 @@ export default function LoginPage() {
     const { isLoading } = useAppSelector((state) => state.auth);
 
     // Clear form when switching login types
-    const handleLoginTypeChange = (type: 'Agent' | 'Buyer') => {
+    const handleLoginTypeChange = (type: 'Agent' | 'Client') => {
         setLoginType(type);
         setEmailOrPhoneNumber('');
         setPassword('');
@@ -35,7 +36,25 @@ export default function LoginPage() {
         }
 
         try {
-            const result = await dispatch(login({ emailOrPhoneNumber, password })).unwrap();
+            // Map UI loginType to backend role
+            const role = loginType === 'Agent' ? 'AGENT' : 'CUSTOMER';
+            const result = await dispatch(login({
+                emailOrPhoneNumber,
+                password,
+                role
+            })).unwrap();
+
+            const userData = result?.responseData;
+            console.log("User data", userData);
+            if (!userData) {
+                throw new Error('Invalid user data received');
+            }
+
+            await AsyncStorage.setItem('userData', JSON.stringify(userData));
+
+            if (userData.token) {
+                await AsyncStorage.setItem('authToken', userData.token);
+            }
 
             Toast.show({
                 type: 'success',
@@ -43,8 +62,13 @@ export default function LoginPage() {
                 text2: 'Welcome back!',
             });
 
-            // Navigate to home after successful login
-            router.replace('/(tabs)');
+            // Navigate to the correct dashboard based on role
+            if (loginType === 'Agent') {
+                // console.log("user data stored:", userData)
+                router.replace('/(tabs)/agentIndex');
+            } else {
+                router.replace('/(tabs)');
+            }
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -55,56 +79,17 @@ export default function LoginPage() {
     };
 
 
-    // const handleLogin = async () => {
-    //     if (!emailOrPhoneNumber || !password) {
-    //         Toast.show({
-    //             type: 'error',
-    //             text1: 'Validation Error',
-    //             text2: 'Please fill in all fields',
-    //         });
-    //         return;
-    //     }
-
-    //     try {
-    //         const role = loginType === 'Buyer' ? 'Client' : 'Agent';
-    //         const result = await dispatch(login({
-    //             emailOrPhoneNumber,
-    //             password,
-    //             role: role as 'Agent' | 'Client'
-    //         })).unwrap();
-
-    //         //  Check and store the token
-    //         if (result?.token) {
-    //             await AsyncStorage.setItem('authToken', result?.responseData?.token);
-    //             console.log('Token stored successfully');
-    //         }
-
-    //         Toast.show({
-    //             type: 'success',
-    //             text1: result?.message || 'Login Successful',
-    //             text2: `Welcome back ${loginType === 'Agent' ? 'Agent' : ''}!`,
-    //         });
-
-    //         // Redirect to tabs - the tab layout will show the correct home screen
-    //         router.replace('/(tabs)');
-    //     } catch (error: any) {
-    //         Toast.show({
-    //             type: 'error',
-    //             text1: 'Login Failed',
-    //             text2: error?.message || error || 'Invalid credentials',
-    //         });
-    //     }
-    // };
-
     return (
         <SafeAreaView style={styles.safeArea}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <ScrollView
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.container}>
                         {/* Logo Section */}
@@ -134,13 +119,13 @@ export default function LoginPage() {
                             <TouchableOpacity
                                 style={[
                                     styles.toggleButton,
-                                    loginType === 'Buyer' && styles.toggleButtonActive
+                                    loginType === 'Client' && styles.toggleButtonActive
                                 ]}
-                                onPress={() => handleLoginTypeChange('Buyer')}
+                                onPress={() => handleLoginTypeChange('Client')}
                             >
                                 <Text style={[
                                     styles.toggleText,
-                                    loginType === 'Buyer' && styles.toggleTextActive
+                                    loginType === 'Client' && styles.toggleTextActive
                                 ]}>
                                     Buyer
                                 </Text>
@@ -181,7 +166,7 @@ export default function LoginPage() {
                                     />
                                 </TouchableOpacity>
                             </View>
-                            <TouchableOpacity onPress={() => console.log('Forgot password pressed')}>
+                            <TouchableOpacity onPress={() => router.push('/changePassword')}>
                                 <Text style={styles.forgotPasswordText}>Can't remember your password?</Text>
                             </TouchableOpacity>
 
@@ -196,7 +181,7 @@ export default function LoginPage() {
                                 />
                             )}
 
-                            {loginType === 'Buyer' && (
+                            {loginType === 'Client' && (
                                 <View style={styles.account}>
                                     <Text>
                                         Don't have an account?
@@ -209,7 +194,7 @@ export default function LoginPage() {
                         </View>
 
                         {/* Biometric Login */}
-                        {loginType === 'Buyer' && (
+                        {loginType === 'Client' && (
                             <TouchableOpacity style={styles.biometricButton} onPress={() => console.log('Biometric login pressed')}>
                                 <Text style={styles.biometricText}>Biometric Login</Text>
                             </TouchableOpacity>
@@ -225,11 +210,12 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F5F5F5',
-        paddingTop: 20,
+        paddingTop: 30,
     },
     container: {
         flex: 1,
         paddingHorizontal: 20,
+        paddingBottom: 30,
         justifyContent: 'center',
     },
     logo: {

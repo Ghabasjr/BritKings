@@ -1,25 +1,97 @@
 import CustomInputs from '@/components/CustomInputs/CustomInputs';
 import GradientButton from '@/components/GradientButton/GradientButton';
+import { AUTH_ENDPOINTS, BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export default function ChangePasswordPage() {
-    const [currentPassword, setCurrentPassword] = useState('');
+    const [email, setEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleChangePassword = () => {
-        // Add logic here to validate and change the password
-        console.log('Current Password:', currentPassword);
-        console.log('New Password:', newPassword);
-        console.log('Confirm Password:', confirmPassword);
+    const handleChangePassword = async () => {
+        // Validation
+        if (!email || !newPassword || !confirmPassword) {
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Please fill in all fields',
+            });
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Passwords do not match',
+            });
+            return;
+        }
+
+        // Password strength validation
+        if (newPassword.length < 8) {
+            Toast.show({
+                type: 'error',
+                text1: 'Weak Password',
+                text2: 'Password must be at least 8 characters',
+            });
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const response = await fetch(`${BASE_URL}${AUTH_ENDPOINTS.FORGOT_PASSWORD}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password: newPassword,
+                    confirmPassword,
+                }),
+            });
+
+            const result = await response.json();
+            console.log('Forgot password response:', result);
+
+            if (!response.ok || result.responseCode !== '00') {
+                throw new Error(result.responseMessage || result.message || 'Failed to reset password');
+            }
+
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: result.responseMessage || 'Password reset successfully',
+            });
+
+            // Navigate back to login after 1.5 seconds
+            setTimeout(() => {
+                router.replace('/login');
+            }, 1500);
+
+        } catch (error: any) {
+            console.error('Forgot password error:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Reset Failed',
+                text2: error.message || 'Failed to reset password',
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => console.log('Go back')}>
+                <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#ffa500" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Change Password</Text>
@@ -30,11 +102,12 @@ export default function ChangePasswordPage() {
                 <View style={styles.inputContainer}>
                     <CustomInputs
                         style={styles.textInput}
-                        placeholder="Current Password"
+                        placeholder="Email"
                         placeholderTextColor="#888"
-                        secureTextEntry={true}
-                        value={currentPassword}
-                        onChangeText={setCurrentPassword}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={email}
+                        onChangeText={setEmail}
                     />
                 </View>
 
@@ -60,7 +133,13 @@ export default function ChangePasswordPage() {
                     />
                 </View>
 
-                <GradientButton title={'Continue'} onPress={handleChangePassword} />
+                {isLoading ? (
+                    <View style={{ alignItems: 'center', marginVertical: 20 }}>
+                        <ActivityIndicator size="large" color="#DD7800" />
+                    </View>
+                ) : (
+                    <GradientButton title={'Continue'} onPress={handleChangePassword} />
+                )}
 
             </ScrollView>
         </SafeAreaView>

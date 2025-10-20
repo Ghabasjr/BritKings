@@ -1,88 +1,244 @@
+import { AGENT_AUTH_ENDPOINTS, BASE_URL } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+
+// Property interface from API response
+interface Property {
+    propertyId: string;
+    name: string;
+    address: string;
+    description: string;
+    size: number;
+    bedrooms: string;
+    parking: string;
+    bathroom: string;
+    pools: string;
+    price: number;
+    status: string;
+    propertyImageUrl: string;
+    available: boolean;
+    createdAt: string;
+    updatedAt: string;
+    deleted: boolean;
+}
 
 // Lead Card Component matching the design from the image
 interface LeadCardProps {
-    name: string;
-    status: string;
-    location: string;
-    address: string;
-    beds: number;
-    baths: number;
-    sqft: string;
-    message: string;
-    image: string;
+    property: Property;
 }
 
-const LeadCard = ({ name, status, location, address, beds, baths, sqft, message, image }: LeadCardProps) => (
-    <View style={styles.card}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.status}>{status}</Text>
+const LeadCard = ({ property }: LeadCardProps) => {
+    const getStatusText = () => {
+        const requestDate = new Date(property.createdAt);
+        const now = new Date();
+        const diffHours = Math.floor((now.getTime() - requestDate.getTime()) / (1000 * 60 * 60));
 
-        <View style={styles.propertyRow}>
-            <View style={styles.propertyInfo}>
-                <Text style={styles.location}>{location}</Text>
-                <Text style={styles.address}>{address}</Text>
-                <Text style={styles.details}>{beds} Beds, {baths} Bath, {sqft} sq ft</Text>
+        if (diffHours < 24) {
+            return 'New request';
+        } else if (diffHours < 48) {
+            return 'Request from yesterday';
+        } else {
+            return `Request from ${Math.floor(diffHours / 24)} days ago`;
+        }
+    };
+
+    const handleViewDetails = () => {
+        router.push({
+            pathname: '/PropertyDetails',
+            params: { propertyId: property.propertyId }
+        });
+    };
+
+    return (
+        <View style={styles.card}>
+            <View style={styles.headerRow}>
+                <Text style={styles.name}>{property.name}</Text>
+                {property.available && (
+                    <View style={styles.availableBadge}>
+                        <Text style={styles.availableText}>Available</Text>
+                    </View>
+                )}
+            </View>
+            <Text style={styles.status}>{getStatusText()}</Text>
+
+            <View style={styles.propertyRow}>
+                <View style={styles.propertyInfo}>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.price}>${property.price?.toLocaleString()}</Text>
+                        <View style={styles.statusBadge}>
+                            <Text style={styles.statusBadgeText}>{property.status}</Text>
+                        </View>
+                    </View>
+                    <Text style={styles.address}>{property.address}</Text>
+                    <Text style={styles.details}>
+                        {property.bedrooms} Beds, {property.bathroom} Bath, {property.size?.toLocaleString()} sq ft
+                    </Text>
+                    {property.parking && (
+                        <Text style={styles.parking}>
+                            <Ionicons name="car" size={14} color="#DD7800" /> {property.parking} Parking
+                        </Text>
+                    )}
+                </View>
+
+                {property.propertyImageUrl && (
+                    <Image
+                        source={{ uri: property.propertyImageUrl }}
+                        style={styles.propertyImage}
+                        resizeMode="cover"
+                    />
+                )}
             </View>
 
-            {image && (
-                <Image
-                    source={{ uri: image }}
-                    style={styles.propertyImage}
-                    resizeMode="cover"
-                />
+            {property.description && (
+                <View style={styles.messageContainer}>
+                    <Text style={styles.messageLabel}>Property Description:</Text>
+                    <Text style={styles.messageText}>{property.description}</Text>
+                </View>
             )}
-        </View>
 
-        <View style={styles.messageContainer}>
-            <Text style={styles.messageText}>{message}</Text>
-        </View>
+            <View style={styles.timeInfo}>
+                <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                <Text style={styles.timeText}>
+                    Requested on {new Date(property.createdAt).toLocaleDateString()} at {new Date(property.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </Text>
+            </View>
 
-        <TouchableOpacity style={styles.viewDetailsButton}>
-            <Text style={styles.viewDetailsText}>View Details</Text>
-        </TouchableOpacity>
-    </View>
-);
+            <TouchableOpacity style={styles.viewDetailsButton} onPress={handleViewDetails}>
+                <Text style={styles.viewDetailsText}>View Details</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
 
 export default function LeadPage() {
-    // Sample lead data - replace with actual data from API
-    const leads: LeadCardProps[] = [
-        {
-            name: 'A.S Abubakar',
-            status: 'New request',
-            location: 'Kano, Nigeria',
-            address: '123 Mable Street',
-            beds: 3,
-            baths: 2,
-            sqft: '15000',
-            message: 'I am interested in 5381 NW Z Hwy, Bates City, MO 64011.',
-            image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=300&fit=crop'
-        },
-        {
-            name: 'A.S Abubakar',
-            status: 'New request',
-            location: 'Kano, Nigeria',
-            address: '123 Mable Street',
-            beds: 3,
-            baths: 2,
-            sqft: '15000',
-            message: 'I am interested in 5381 NW Z Hwy, Bates City, MO 64011.',
-            image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=300&fit=crop'
-        },
-    ];
+    const [leads, setLeads] = useState<Property[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Fetch requested properties on mount
+    useEffect(() => {
+        fetchRequestedProperties();
+    }, []);
+
+    const fetchRequestedProperties = async (isRefresh = false) => {
+        if (isRefresh) {
+            setRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
+
+        try {
+            // Get auth token and user data
+            const token = await AsyncStorage.getItem('authToken');
+            const userDataString = await AsyncStorage.getItem('userData');
+
+            if (!token) {
+                throw new Error('Authentication token not found. Please login again.');
+            }
+
+            // Get agentId from user data
+            let agentId = '';
+            if (userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    agentId = userData.agentId || userData.userId || userData.id || '';
+                } catch (e) {
+                    console.error('Failed to parse user data:', e);
+                }
+            }
+
+            if (!agentId) {
+                throw new Error('Agent ID not found. Please login again.');
+            }
+
+            // Replace {agentId} in endpoint
+            const endpoint = AGENT_AUTH_ENDPOINTS.PROPERTIES.replace('{agentId}', agentId);
+
+            console.log('Fetching requested properties from:', `${BASE_URL}${endpoint}`);
+
+            const response = await fetch(`${BASE_URL}${endpoint}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            console.log('Requested properties response status:', response.status);
+
+            let result;
+            try {
+                result = await response.json();
+                console.log('Requested properties response:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
+
+            if (!response.ok || result.responseCode !== '00') {
+                const errorMessage = result?.responseMessage || result?.message || 'Failed to fetch leads';
+                throw new Error(errorMessage);
+            }
+
+            // Set properties from responseData
+            const leadsData = result.responseData || [];
+
+            // Sort by most recent first
+            leadsData.sort((a: Property, b: Property) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            setLeads(leadsData);
+
+            if (isRefresh && leadsData.length > 0) {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Leads Refreshed',
+                    text2: `Found ${leadsData.length} lead${leadsData.length !== 1 ? 's' : ''}`,
+                });
+            }
+        } catch (error: any) {
+            console.error('Fetch requested properties error:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.message || 'Failed to load leads',
+            });
+            setLeads([]);
+        } finally {
+            setIsLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const handleRefresh = () => {
+        fetchRequestedProperties(true);
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={28} color="#DD7800" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Lead</Text>
                 <View style={{ width: 28 }} />
+                <View style={styles.headerCenter}>
+                    <Text style={styles.headerTitle}>Lead</Text>
+                    {leads.length > 0 && (
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeText}>{leads.length}</Text>
+                        </View>
+                    )}
+                </View>
+                <TouchableOpacity onPress={handleRefresh} disabled={refreshing}>
+                    <Ionicons
+                        name="refresh-outline"
+                        size={24}
+                        color={refreshing ? "#ccc" : "#DD7800"}
+                    />
+                </TouchableOpacity>
             </View>
 
             <ScrollView
@@ -91,10 +247,48 @@ export default function LeadPage() {
                 contentContainerStyle={{ paddingBottom: 100 }}
             >
                 <View style={styles.container}>
-                    {/* Leads List */}
-                    {leads.map((lead, index) => (
-                        <LeadCard key={index} {...lead} />
-                    ))}
+                    {/* Loading State */}
+                    {isLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color="#DD7800" />
+                            <Text style={styles.loadingText}>Loading leads...</Text>
+                        </View>
+                    ) : leads.length > 0 ? (
+                        <>
+                            {/* Leads Count */}
+                            <View style={styles.countContainer}>
+                                <Text style={styles.countText}>
+                                    {leads.length} {leads.length === 1 ? 'Lead' : 'Leads'}
+                                </Text>
+                                <Text style={styles.countSubtext}>
+                                    {leads.filter(l => {
+                                        const hours = Math.floor((new Date().getTime() - new Date(l.createdAt).getTime()) / (1000 * 60 * 60));
+                                        return hours < 24;
+                                    }).length} new today
+                                </Text>
+                            </View>
+
+                            {/* Leads List */}
+                            {leads.map((lead, index) => (
+                                <LeadCard key={lead.propertyId || index} property={lead} />
+                            ))}
+                        </>
+                    ) : (
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="people-outline" size={80} color="#ccc" />
+                            <Text style={styles.emptyText}>No leads yet</Text>
+                            <Text style={styles.emptySubtext}>
+                                You don't have any requested properties at the moment.
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.refreshButton}
+                                onPress={handleRefresh}
+                            >
+                                <Ionicons name="refresh" size={20} color="#fff" />
+                                <Text style={styles.refreshButtonText}>Refresh</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -105,7 +299,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#FAFAFA',
-        paddingTop: 0,
+        paddingTop: 30,
     },
     header: {
         flexDirection: 'row',
@@ -115,11 +309,29 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         backgroundColor: '#FAFAFA',
     },
+    headerCenter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
     headerTitle: {
         fontSize: 22,
         fontWeight: 'bold',
         color: '#000',
         textAlign: 'center',
+    },
+    badge: {
+        backgroundColor: '#DD7800',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        minWidth: 24,
+        alignItems: 'center',
+    },
+    badgeText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#fff',
     },
     scrollView: {
         flex: 1,
@@ -127,6 +339,64 @@ const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 20,
         paddingTop: 16,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#666',
+    },
+    countContainer: {
+        marginBottom: 16,
+    },
+    countText: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#000',
+    },
+    countSubtext: {
+        fontSize: 14,
+        color: '#999',
+        marginTop: 4,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyText: {
+        marginTop: 16,
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+    },
+    emptySubtext: {
+        marginTop: 8,
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        paddingHorizontal: 40,
+    },
+    refreshButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#DD7800',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 25,
+        marginTop: 20,
+    },
+    refreshButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#fff',
     },
     card: {
         backgroundColor: '#fff',
@@ -139,11 +409,29 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         elevation: 3,
     },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
     name: {
+        flex: 1,
         fontSize: 22,
         fontWeight: 'bold',
         color: '#000',
-        marginBottom: 8,
+        marginRight: 8,
+    },
+    availableBadge: {
+        backgroundColor: '#10B981',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    availableText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#fff',
     },
     status: {
         fontSize: 15,
@@ -160,10 +448,27 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingRight: 12,
     },
-    location: {
-        fontSize: 14,
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 8,
+    },
+    price: {
+        fontSize: 22,
+        fontWeight: 'bold',
         color: '#DD7800',
-        marginBottom: 6,
+    },
+    statusBadge: {
+        backgroundColor: '#FFF3E0',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    statusBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#DD7800',
     },
     address: {
         fontSize: 18,
@@ -176,9 +481,14 @@ const styles = StyleSheet.create({
         color: '#9CA3AF',
         marginTop: 4,
     },
+    parking: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 6,
+    },
     propertyImage: {
         width: 140,
-        height: 90,
+        height: 120,
         borderRadius: 12,
         backgroundColor: '#f0f0f0',
     },
@@ -186,14 +496,34 @@ const styles = StyleSheet.create({
         backgroundColor: '#F9FAFB',
         borderRadius: 12,
         padding: 16,
-        marginBottom: 16,
+        marginBottom: 12,
         borderWidth: 1,
         borderColor: '#F3F4F6',
+    },
+    messageLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#999',
+        marginBottom: 6,
+        textTransform: 'uppercase',
     },
     messageText: {
         fontSize: 14,
         color: '#6B7280',
         lineHeight: 20,
+    },
+    timeInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 16,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+    },
+    timeText: {
+        fontSize: 12,
+        color: '#9CA3AF',
     },
     viewDetailsButton: {
         backgroundColor: '#DD7800',

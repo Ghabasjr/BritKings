@@ -1,29 +1,132 @@
+import { BASE_URL, CSTOMER_AUTH_ENDPOINTS } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export default function ContactAgentScreen() {
+    const params = useLocalSearchParams();
+    const propertyId = params.propertyId as string;
+    const agentId = params.agentId as string;
+
+    // Debug logging
+    console.log('ContactAgent Screen - Params:', params);
+    console.log('ContactAgent Screen - propertyId:', propertyId);
+    console.log('ContactAgent Screen - agentId:', agentId);
+
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
-    const [message, setMessage] = useState('I am interested in 5381 NW Z Hwy, Bates City, MO 64011.');
+    const [message, setMessage] = useState('I am interested in this property.');
     const [scheduleVisit, setScheduleVisit] = useState(false);
     const [askQuestion, setAskQuestion] = useState(false);
     const [requestFinancing, setRequestFinancing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleContactAgent = () => {
-        // Handle contact agent logic here
-        console.log({
-            name,
-            phone,
-            email,
-            message,
-            scheduleVisit,
-            askQuestion,
-            requestFinancing,
-        });
-        router.push('/ContactSuccess');
+
+    const handleContactAgent = async () => {
+        // Validation
+        if (!name || !phone || !email || !message) {
+            Toast.show({
+                type: 'error',
+                text1: 'Validation Error',
+                text2: 'Please fill in all required fields',
+            });
+            return;
+        }
+
+        // Validate propertyId
+        if (!propertyId) {
+            Toast.show({
+                type: 'error',
+                text1: 'Missing Property ID',
+                text2: 'Property information is required',
+            });
+            return;
+        }
+
+        // Log warning if agentId is missing (but continue anyway)
+        if (!agentId) {
+            console.warn('Agent ID is missing - backend will need to assign an agent');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Toast.show({
+                type: 'error',
+                text1: 'Invalid Email',
+                text2: 'Please enter a valid email address',
+            });
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            // Get auth token
+            const token = await AsyncStorage.getItem('authToken');
+            // Build the request body according to API spec
+            const requestBody = {
+                propertyId: propertyId,
+                agentId: agentId || "",
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                message: message,
+            };
+            console.log('Preparing to send Contact Agent request', requestBody);
+
+            console.log('Contact Agent request:', `${BASE_URL}${CSTOMER_AUTH_ENDPOINTS.CONTACT_AGENT}`);
+            console.log('Request body:', JSON.stringify(requestBody, null, 2));
+            console.log('agentId status:', agentId ? `Present: ${agentId}` : 'MISSING - sending empty string');
+
+            const response = await fetch(`${BASE_URL}${CSTOMER_AUTH_ENDPOINTS.CONTACT_AGENT}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` }),
+                },
+                body: JSON.stringify(requestBody),
+            });
+
+            console.log('Contact Agent response status:', response.status);
+
+            let result;
+            try {
+                result = await response.json();
+                console.log('Contact Agent response:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
+
+            if (!response.ok || result.responseCode !== '00') {
+                const errorMessage = result?.responseMessage || result?.message || result?.error || 'Failed to contact agent';
+                throw new Error(errorMessage);
+            }
+
+            // Success
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: result?.responseMessage || 'Agent contacted successfully',
+            });
+
+            // Navigate to success page
+            router.push('/ContactSuccess');
+        } catch (error: any) {
+            console.error('Contact Agent error:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.message || 'Failed to contact agent. Please try again.',
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleCancel = () => {
@@ -151,8 +254,16 @@ export default function ContactAgentScreen() {
                 </TouchableOpacity>
 
                 {/* Contact Agent Button */}
-                <TouchableOpacity style={styles.contactButton} onPress={handleContactAgent}>
-                    <Text style={styles.contactButtonText}>Contact Agent</Text>
+                <TouchableOpacity
+                    style={[styles.contactButton, isLoading && styles.contactButtonDisabled]}
+                    onPress={handleContactAgent}
+                    disabled={isLoading}
+                >
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                        <Text style={styles.contactButtonText}>Contact Agent</Text>
+                    )}
                 </TouchableOpacity>
 
                 {/* Cancel Button */}
@@ -170,13 +281,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+        paddingTop: 40,
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
         paddingHorizontal: 20,
-        paddingTop: 60,
+        paddingTop: 20,
     },
     header: {
         fontSize: 28,
@@ -242,6 +354,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 4,
+    },
+    contactButtonDisabled: {
+        backgroundColor: '#CCC',
+        opacity: 0.7,
     },
     contactButtonText: {
         color: '#fff',

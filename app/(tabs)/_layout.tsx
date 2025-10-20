@@ -1,10 +1,10 @@
 
+import { useAppSelector } from '@/store/hooks';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppSelector } from '@/store/hooks';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function TabLayout() {
     const insets = useSafeAreaInsets();
@@ -96,19 +96,6 @@ export default function TabLayout() {
                     tabBarIcon: ({ color }) => (
                         <Ionicons name="filter" size={24} color={color} />
                     ),
-                }}
-            />
-
-            {/* Performance - Agent Only */}
-            <Tabs.Screen
-                name="Performance"
-                options={{
-                    headerShown: false,
-                    title: 'Performance',
-                    tabBarIcon: ({ color }) => (
-                        <Ionicons name="bar-chart-outline" size={24} color={color} />
-                    ),
-                    href: userRole === 'Agent' ? undefined : null,
                 }}
             />
 

@@ -18,7 +18,7 @@ export interface SignupData {
 export interface LoginData {
   emailOrPhoneNumber: string;
   password: string;
-  role?: 'Agent' | 'Client';
+  role?: 'AGENT' | 'CUSTOMER';
 }
 
 export interface OTPValidation {
@@ -102,6 +102,7 @@ export const login = createAsyncThunk(
         body: JSON.stringify({
           emailOrPhoneNumber: data.emailOrPhoneNumber,
           password: data.password,
+          role: data.role || 'Client', // Send role to backend
         }),
       });
 
@@ -136,12 +137,27 @@ export const login = createAsyncThunk(
         await AsyncStorage.setItem('authToken', resultData.token);
       }
 
-      // Store user role in AsyncStorage
+      // Store user role in AsyncStorage - Map backend role to UI role
       if (data.role) {
-        await AsyncStorage.setItem('userRole', data.role);
+        const uiRole = data.role === 'AGENT' ? 'Agent' : 'Client';
+        await AsyncStorage.setItem('userRole', uiRole);
       }
 
-      return { ...result, role: data.role };
+      // Store user data in AsyncStorage (for API calls that need email/phone)
+      const userData = {
+        email: resultData?.user?.email || resultData?.email || data.emailOrPhoneNumber,
+        phoneNumber: resultData?.user?.phoneNumber || resultData?.phoneNumber || data.emailOrPhoneNumber,
+        agentId: resultData?.user?.agentId || resultData?.agentId || resultData?.userId || resultData?.user?.id || resultData?.id,
+        customerId: resultData?.user?.customerId || resultData?.customerId || resultData?.userId || resultData?.user?.id || resultData?.id,
+        ...resultData?.user,
+        ...resultData
+      };
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
+      console.log('User data stored:', userData);
+
+      // Map backend role to UI role for Redux store
+      const uiRole = data.role === 'AGENT' ? 'Agent' : 'Client';
+      return { ...result, role: uiRole };
     } catch (error: any) {
       console.error('Login error:', error);
       return rejectWithValue(error.message || 'Network error');
@@ -234,6 +250,7 @@ export const validateOTP = createAsyncThunk(
 export const logout = createAsyncThunk('auth/logout', async () => {
   await AsyncStorage.removeItem('authToken');
   await AsyncStorage.removeItem('userRole');
+  await AsyncStorage.removeItem('userData');
 });
 
 // Auth Slice

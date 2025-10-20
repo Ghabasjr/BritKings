@@ -1,19 +1,45 @@
 import FilterModal from '@/components/FilterModal/FilterModal';
+import { BASE_URL, CSTOMER_AUTH_ENDPOINTS } from '@/constants/api';
+import { fetchWithAuth } from '@/utils/authGuard';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+
+// Property interface
+interface Property {
+    propertyId: string;
+    name: string;
+    address: string;
+    description: string;
+    size: number;
+    bedrooms: string;
+    parking: string;
+    bathroom: string;
+    pools: string;
+    price: number;
+    status: string;
+    propertyImageUrl: string;
+    available: boolean;
+    createdAt: string;
+    updatedAt: string;
+    deleted: boolean;
+}
 
 // Property Card Component matching the new design
-const PropertyCard = ({ title, location, type, beds, baths, sqft, status, price, image }: any) => (
-    <TouchableOpacity style={propertyStyles.card} onPress={() => router.push('/PropertyDetails')}>
+const PropertyCard = ({ property }: { property: Property }) => (
+    <TouchableOpacity
+        style={propertyStyles.card}
+        onPress={() => router.push(`/PropertyDetails?propertyId=${property.propertyId}`)}
+    >
         <View style={propertyStyles.imageContainer}>
             <Image
-                source={{ uri: image }}
+                source={{ uri: property.propertyImageUrl || 'https://placehold.co/600x400/e0e0e0/555?text=Property' }}
                 style={propertyStyles.image}
             />
             <View style={propertyStyles.typeTag}>
-                <Text style={propertyStyles.typeText}>{type}</Text>
+                <Text style={propertyStyles.typeText}>{property.status}</Text>
             </View>
             <TouchableOpacity style={propertyStyles.favoriteButton}>
                 <Ionicons name="heart" size={24} color="#DD7800" />
@@ -21,20 +47,20 @@ const PropertyCard = ({ title, location, type, beds, baths, sqft, status, price,
         </View>
         <View style={propertyStyles.content}>
             <View style={propertyStyles.priceRow}>
-                <Text style={propertyStyles.price}>{price}</Text>
+                <Text style={propertyStyles.price}>${property.price?.toLocaleString()}</Text>
                 <View style={propertyStyles.locationRow}>
                     <Ionicons name="location-sharp" size={16} color="#666" />
-                    <Text style={propertyStyles.locationText}>{location}</Text>
+                    <Text style={propertyStyles.locationText}>{property.address}</Text>
                 </View>
             </View>
             <View style={propertyStyles.detailsRow}>
-                <Text style={propertyStyles.detailsText}>{beds} beds</Text>
+                <Text style={propertyStyles.detailsText}>{property.bedrooms} beds</Text>
                 <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{baths} bath</Text>
+                <Text style={propertyStyles.detailsText}>{property.bathroom} bath</Text>
                 <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{sqft} sqft - {status}</Text>
+                <Text style={propertyStyles.detailsText}>{property.size?.toLocaleString()} sqft - {property.status}</Text>
             </View>
-            <Text style={propertyStyles.address}>{title}</Text>
+            <Text style={propertyStyles.address}>{property.address}</Text>
         </View>
     </TouchableOpacity>
 );
@@ -135,45 +161,10 @@ const propertyStyles = StyleSheet.create({
 });
 
 export default function RealEstateHomePage() {
-    // Property data structure matching the new design
-    const allProperties = [
-        {
-            title: '12345 Idris adamu yobe way, kano state',
-            location: 'Kano state Nigeria',
-            type: 'Apartment',
-            beds: 3,
-            baths: 1,
-            sqft: '1,234',
-            status: 'Active',
-            price: '$450,999',
-            image: 'https://placehold.co/600x400/e0e0e0/555?text=Property+1'
-        },
-        {
-            title: '456 Luxury Avenue, Abuja FCT',
-            location: 'Abuja FCT Nigeria',
-            type: 'Apartment',
-            beds: 4,
-            baths: 2,
-            sqft: '2,500',
-            status: 'Active',
-            price: '$750,000',
-            image: 'https://placehold.co/600x400/e0e0e0/555?text=Property+2'
-        },
-        {
-            title: '789 Modern Street, Lagos State',
-            location: 'Lagos State Nigeria',
-            type: 'Apartment',
-            beds: 2,
-            baths: 1,
-            sqft: '1,100',
-            status: 'Active',
-            price: '$325,500',
-            image: 'https://placehold.co/600x400/e0e0e0/555?text=Property+3'
-        },
-    ];
-
     const [searchQuery, setSearchQuery] = useState('');
-    const [properties, setProperties] = useState(allProperties);
+    const [properties, setProperties] = useState<Property[]>([]);
+    const [allProperties, setAllProperties] = useState<Property[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeTab, setActiveTab] = useState('buy');
     const [showSellModal, setShowSellModal] = useState(false);
@@ -184,15 +175,70 @@ export default function RealEstateHomePage() {
     const [propertyLocation, setPropertyLocation] = useState('');
     const [propertySize, setPropertySize] = useState('');
 
-    // Function to filter properties based on search query
-    const handleSearch = (query: any) => {
-        setSearchQuery(query);
-        const lowerCaseQuery = query.toLowerCase();
+    // Fetch properties on mount
+    useEffect(() => {
+        fetchProperties();
+    }, []);
 
+    const fetchProperties = async () => {
+        setIsLoading(true);
+        try {
+            const url = `${BASE_URL}${CSTOMER_AUTH_ENDPOINTS.PROPERTIES}`;
+            console.log('Fetching all properties from:', url);
+
+            // Use fetchWithAuth which handles token expiration
+            const response = await fetchWithAuth(url, {
+                method: 'GET',
+            });
+
+            console.log('Properties response status:', response.status);
+
+            let result;
+            try {
+                result = await response.json();
+                console.log('Properties response:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
+
+            if (!response.ok || result.responseCode !== '00') {
+                const errorMessage = result?.responseMessage || result?.message || 'Failed to fetch properties';
+                throw new Error(errorMessage);
+            }
+
+            // Get properties from paginated response
+            const propertiesData = result.responseData?.content || [];
+            setAllProperties(propertiesData);
+            setProperties(propertiesData);
+        } catch (error: any) {
+            console.error('Fetch properties error:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.message || 'Failed to load properties',
+            });
+            setAllProperties([]);
+            setProperties([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Function to filter properties based on search query
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        if (query.trim() === '') {
+            setProperties(allProperties);
+            return;
+        }
+
+        const lowerCaseQuery = query.toLowerCase();
         const filteredProperties = allProperties.filter(property =>
-            property.title.toLowerCase().includes(lowerCaseQuery) ||
-            property.location.toLowerCase().includes(lowerCaseQuery) ||
-            property.type.toLowerCase().includes(lowerCaseQuery)
+            property.name.toLowerCase().includes(lowerCaseQuery) ||
+            property.address.toLowerCase().includes(lowerCaseQuery) ||
+            property.description.toLowerCase().includes(lowerCaseQuery) ||
+            property.status.toLowerCase().includes(lowerCaseQuery)
         );
         setProperties(filteredProperties);
     };
@@ -262,9 +308,24 @@ export default function RealEstateHomePage() {
 
                     {/* Property Cards List */}
                     <View style={styles.propertyList}>
-                        {properties.map((property, index) => (
-                            <PropertyCard key={index} {...property} />
-                        ))}
+                        {isLoading ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#DD7800" />
+                                <Text style={styles.loadingText}>Loading properties...</Text>
+                            </View>
+                        ) : properties.length > 0 ? (
+                            properties.map((property) => (
+                                <PropertyCard key={property.propertyId} property={property} />
+                            ))
+                        ) : (
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="home-outline" size={64} color="#ccc" />
+                                <Text style={styles.emptyText}>No properties found</Text>
+                                <Text style={styles.emptySubtext}>
+                                    Try adjusting your search or check back later
+                                </Text>
+                            </View>
+                        )}
                     </View>
                 </View>
             </ScrollView>
@@ -459,6 +520,36 @@ const styles = StyleSheet.create({
     },
     propertyList: {
         marginBottom: 20,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#666',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    emptyText: {
+        marginTop: 16,
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+    },
+    emptySubtext: {
+        marginTop: 8,
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        paddingHorizontal: 40,
     },
 });
 
