@@ -14,7 +14,14 @@ const ClientPropertyCard = ({ property }: any) => (
                 source={{ uri: property.propertyImageUrl || 'https://placehold.co/600x400/e0e0e0/555?text=Property' }}
                 style={propertyStyles.image}
             />
-            <View style={propertyStyles.typeTag}>
+            {/* <View style={propertyStyles.typeTag}>
+                <Text style={propertyStyles.typeText}>{property.status}</Text>
+            </View> */}
+            <View style={[
+                propertyStyles.typeTag,
+                property.status === 'SOLD' && propertyStyles.soldTag,
+                property.status === 'RENTED' && propertyStyles.rentedTag
+            ]}>
                 <Text style={propertyStyles.typeText}>{property.status}</Text>
             </View>
             <TouchableOpacity style={propertyStyles.favoriteButton}>
@@ -145,6 +152,12 @@ const propertyStyles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
+    },
+    soldTag: {
+        backgroundColor: '#FF6B6B',
+    },
+    rentedTag: {
+        backgroundColor: '#4ECDC4',
     },
     typeText: {
         fontSize: 14,
@@ -379,6 +392,14 @@ export default function PropertiesPage() {
             }
 
             console.log('Fetching properties from:', `${BASE_URL}${endpoint}`);
+            // const propertiesData = result.responseData || [];
+            // let filteredData = propertiesData;
+            // if (userRole === 'Client' && activeTab === 'Purchased Properties') {
+            //     filteredData = propertiesData.filter((prop: Property) => prop.status === 'SOLD');
+            // }
+
+            // setProperties(filteredData);
+            // setFilteredProperties(filteredData);
 
             const response = await fetch(`${BASE_URL}${endpoint}`, {
                 method: 'GET',
@@ -402,8 +423,15 @@ export default function PropertiesPage() {
             }
 
             const propertiesData = result.responseData || [];
-            setProperties(propertiesData);
-            setFilteredProperties(propertiesData);
+
+            // Filter purchased properties to only show SOLD items
+            let filteredData = propertiesData;
+            if (userRole === 'Client' && activeTab === 'Purchased Properties') {
+                filteredData = propertiesData.filter((prop: Property) => prop.status === 'SOLD');
+            }
+
+            setProperties(filteredData);
+            setFilteredProperties(filteredData);
         } catch (error: any) {
             console.error('Fetch properties error:', error);
             Toast.show({
