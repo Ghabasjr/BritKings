@@ -1,0 +1,284 @@
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Toast from "react-native-toast-message";
+import { BASE_URL, CLIENT_ENDPOINTS } from "../constants/api";
+
+const RequestFinancingScreen = () => {
+  const params = useLocalSearchParams();
+  const propertyId = params.propertyId as string;
+
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [financingAmount, setFinancingAmount] = useState("");
+  const [employmentStatus, setEmploymentStatus] = useState("");
+  const [annualIncome, setAnnualIncome] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+
+
+  const handleSubmit = async () => {
+    // Validation
+    if (!fullName.trim()) {
+      Toast.show({ type: "error", text1: "Error", text2: "Please enter your full name" });
+      return;
+    }
+    if (!phone.trim()) {
+      Toast.show({ type: "error", text1: "Error", text2: "Please enter your phone number" });
+      return;
+    }
+    if (!financingAmount.trim()) {
+      Toast.show({ type: "error", text1: "Error", text2: "Please enter desired financing amount" });
+      return;
+    }
+    if (!employmentStatus.trim()) {
+      Toast.show({ type: "error", text1: "Error", text2: "Please enter your employment status" });
+      return;
+    }
+    if (!annualIncome.trim()) {
+      Toast.show({ type: "error", text1: "Error", text2: "Please enter your annual income" });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Retrieve customerId
+      let customerId = "";
+      const userDataString = await AsyncStorage.getItem("userData");
+      if (userDataString) {
+        try {
+          const userData = JSON.parse(userDataString);
+          customerId = userData.customerId || userData.userId || userData.id || "";
+        } catch { }
+      }
+
+      if (!customerId) throw new Error("Missing customer ID. Please log in again.");
+
+      const body = {
+        fullName,
+        phoneNumber: phone,
+        employmentStatus,
+        propertyId,
+        budget: Number(financingAmount.replace(/,/g, "")),
+        annualIncome: Number(annualIncome.replace(/,/g, "")),
+        customerId,
+      };
+
+      console.log(" Sending body:", body);
+
+      // const res = await fetch(`${BASE_URL}${CLIENT_ENDPOINTS.REQUEST_FINANCIAL_INFO}`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(body),
+      // });
+
+      const formData = new FormData();
+      formData.append("dto", JSON.stringify(body));
+
+      const res = await fetch(`${BASE_URL}${CLIENT_ENDPOINTS.REQUEST_FINANCIAL_INFO}`, {
+        method: "POST",
+        body: formData,
+      });
+
+
+      let result: any = {};
+      try {
+        const text = await res.text();
+        result = text ? JSON.parse(text) : {};
+      } catch {
+        result = {};
+      }
+
+      console.log(" Response:", result);
+
+      if (!res.ok || result.responseCode !== "00") {
+        const backendMessage =
+          result?.responseMessage?.error ||
+          (Array.isArray(result?.error) ? result.errors.join(", ") : "") ||
+          "Failed to submit request. Please try again.";
+
+        throw new Error(backendMessage);
+      }
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: result.responseMessage || "Your financing request has been submitted.",
+      });
+
+      setTimeout(() => router.back(), 1500);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to submit request",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="#DD7800" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Request Financing Info</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          {/* Full Name */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Full name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Please enter your name"
+              placeholderTextColor="#BBB"
+              value={fullName}
+              onChangeText={setFullName}
+            />
+          </View>
+
+          {/* Phone */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your contact"
+              placeholderTextColor="#BBB"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          {/* Financing Amount */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Desired Financing Amount / Budget</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="$300,000"
+              placeholderTextColor="#BBB"
+              value={financingAmount}
+              onChangeText={setFinancingAmount}
+              keyboardType="numeric"
+            />
+          </View>
+
+          {/* Employment Status */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Employment Status</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Civil servant"
+              placeholderTextColor="#BBB"
+              value={employmentStatus}
+              onChangeText={setEmploymentStatus}
+            />
+          </View>
+
+          {/* Annual Income */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Annual Income</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="$400,000"
+              placeholderTextColor="#BBB"
+              value={annualIncome}
+              onChangeText={setAnnualIncome}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Submit Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.proceedButton, isLoading && styles.proceedButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={isLoading}
+        >
+          <Text style={styles.proceedButtonText}>
+            {isLoading ? "Processing..." : "Proceed"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff", paddingTop: 20 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  backButton: { padding: 4 },
+  headerTitle: { fontSize: 18, fontWeight: "600", color: "#000" },
+  headerSpacer: { width: 32 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 20 },
+  content: { padding: 20 },
+  inputGroup: { marginBottom: 24 },
+  label: { fontSize: 16, fontWeight: "600", color: "#000", marginBottom: 12 },
+  input: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 15,
+    color: "#333",
+  },
+  buttonContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingBottom: 30,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  proceedButton: {
+    backgroundColor: "#DD7800",
+    borderRadius: 30,
+    paddingVertical: 18,
+    alignItems: "center",
+    shadowColor: "#DD7800",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  proceedButtonDisabled: { opacity: 0.6 },
+  proceedButtonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+});
+
+export default RequestFinancingScreen;

@@ -100,7 +100,7 @@ const ProfileScreen = () => {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                    {/* <Ionicons name="chevron-back" size={24} color="#DD7800" /> */}
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Profile</Text>
                 <View style={styles.headerSpacer} />
@@ -167,9 +167,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8f9fa',
-        paddingTop: 5,
+        paddingTop: 40,
     },
     header: {
+        textAlign: 'center',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -183,9 +184,10 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#000',
+        textAlign: 'center',
     },
     headerSpacer: {
         width: 32,

@@ -104,6 +104,11 @@ export default function RootLayout() {
             <Stack.Screen name='ContactSuccess' options={{ headerShown: false }} />
             <Stack.Screen name='Messages' options={{ headerShown: false }} />
             <Stack.Screen name='ChatDetail' options={{ headerShown: false }} />
+            <Stack.Screen name='RequestFinancing' options={{ headerShown: false }} />
+            <Stack.Screen name='ScheduleVisit' options={{ headerShown: false }} />
+            <Stack.Screen name='AskQuestion' options={{ headerShown: false }} />
+            <Stack.Screen name='SecureCheckout' options={{ headerShown: false }} />
+            <Stack.Screen name='PaymentSuccess' options={{ headerShown: false }} />
           </Stack>
         </KeyboardAvoidingView>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
