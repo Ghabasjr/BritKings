@@ -5,18 +5,14 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { CustomerQuestion, FinancialRequest } from '@/types/lead';
 
-// Property interface from API response
 interface Property {
     propertyId: string;
     name: string;
     address: string;
     description: string;
     size: number;
-    bedrooms: string;
-    parking: string;
-    bathroom: string;
-    pools: string;
     price: number;
     status: string;
     propertyImageUrl: string;
@@ -26,7 +22,6 @@ interface Property {
     deleted: boolean;
 }
 
-// Lead Card Component matching the design from the image
 interface LeadCardProps {
     property: Property;
 }
@@ -68,20 +63,14 @@ const LeadCard = ({ property }: LeadCardProps) => {
             <View style={styles.propertyRow}>
                 <View style={styles.propertyInfo}>
                     <View style={styles.priceRow}>
-                        <Text style={styles.price}>${property.price?.toLocaleString()}</Text>
+                        <Text style={styles.price}>₦{property.price?.toLocaleString()}</Text>
                         <View style={styles.statusBadge}>
                             <Text style={styles.statusBadgeText}>{property.status}</Text>
                         </View>
                     </View>
                     <Text style={styles.address}>{property.address}</Text>
-                    <Text style={styles.details}>
-                        {property.bedrooms} Beds, {property.bathroom} Bath, {property.size?.toLocaleString()} sq ft
-                    </Text>
-                    {property.parking && (
-                        <Text style={styles.parking}>
-                            <Ionicons name="car" size={14} color="#DD7800" /> {property.parking} Parking
-                        </Text>
-                    )}
+
+
                 </View>
 
                 {property.propertyImageUrl && (
@@ -114,17 +103,132 @@ const LeadCard = ({ property }: LeadCardProps) => {
     );
 };
 
+// Customer Question Card Component
+interface CustomerQuestionCardProps {
+    question: CustomerQuestion;
+}
+
+const CustomerQuestionCard = ({ question }: CustomerQuestionCardProps) => {
+    return (
+        <View style={styles.card}>
+            <View style={styles.headerRow}>
+                <Ionicons name="help-circle" size={24} color="#DD7800" />
+                <View style={styles.questionBadge}>
+                    <Text style={styles.questionBadgeText}>Customer Question</Text>
+                </View>
+            </View>
+
+            <Text style={styles.name}>{question.fullName}</Text>
+
+            <View style={styles.contactInfo}>
+                <View style={styles.contactRow}>
+                    <Ionicons name="mail-outline" size={16} color="#666" />
+                    <Text style={styles.contactText}>{question.email}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                    <Ionicons name="call-outline" size={16} color="#666" />
+                    <Text style={styles.contactText}>{question.phone}</Text>
+                </View>
+            </View>
+
+            <View style={styles.messageContainer}>
+                <Text style={styles.messageLabel}>Question:</Text>
+                <Text style={styles.messageText}>{question.message}</Text>
+            </View>
+
+            {question.agentDetails && (
+                <View style={styles.agentInfo}>
+                    <Text style={styles.agentLabel}>Assigned Agent:</Text>
+                    <Text style={styles.agentName}>{question.agentDetails.staffName}</Text>
+                    <Text style={styles.agentContact}>{question.agentDetails.email}</Text>
+                </View>
+            )}
+        </View>
+    );
+};
+
+// Financial Request Card Component
+interface FinancialRequestCardProps {
+    request: FinancialRequest;
+}
+
+const FinancialRequestCard = ({ request }: FinancialRequestCardProps) => {
+    return (
+        <View style={styles.card}>
+            <View style={styles.headerRow}>
+                <Ionicons name="cash" size={24} color="#10B981" />
+                <View style={styles.financialBadge}>
+                    <Text style={styles.financialBadgeText}>Financial Request</Text>
+                </View>
+            </View>
+
+            <Text style={styles.name}>{request.fullName}</Text>
+
+            <View style={styles.contactInfo}>
+                <View style={styles.contactRow}>
+                    <Ionicons name="call-outline" size={16} color="#666" />
+                    <Text style={styles.contactText}>{request.phoneNumber}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                    <Ionicons name="briefcase-outline" size={16} color="#666" />
+                    <Text style={styles.contactText}>{request.employmentStatus}</Text>
+                </View>
+            </View>
+
+            <View style={styles.financialDetails}>
+                <View style={styles.financialRow}>
+                    <Text style={styles.financialLabel}>Budget:</Text>
+                    <Text style={styles.financialValue}>₦{request.budget?.toLocaleString()}</Text>
+                </View>
+                <View style={styles.financialRow}>
+                    <Text style={styles.financialLabel}>Annual Income:</Text>
+                    <Text style={styles.financialValue}>₦{request.annualIncome?.toLocaleString()}</Text>
+                </View>
+            </View>
+
+            {request.property && (
+                <View style={styles.propertySection}>
+                    <Text style={styles.propertySectionLabel}>Interested Property:</Text>
+                    <View style={styles.propertyRowCompact}>
+                        <View style={styles.propertyInfoCompact}>
+                            <Text style={styles.propertyNameCompact}>{request.property.name}</Text>
+                            <Text style={styles.propertyAddressCompact}>{request.property.address}</Text>
+                            <Text style={styles.propertyPriceCompact}>₦{request.property.price?.toLocaleString()}</Text>
+                        </View>
+                        {request.property.propertyImageUrl && (
+                            <Image
+                                source={{ uri: request.property.propertyImageUrl }}
+                                style={styles.propertyImageSmall}
+                                resizeMode="cover"
+                            />
+                        )}
+                    </View>
+                </View>
+            )}
+
+            {request.customer && (
+                <View style={styles.customerInfo}>
+                    <Text style={styles.customerLabel}>Customer Details:</Text>
+                    <Text style={styles.customerEmail}>{request.customer.email}</Text>
+                </View>
+            )}
+        </View>
+    );
+};
+
 export default function LeadPage() {
     const [leads, setLeads] = useState<Property[]>([]);
+    const [customerQuestions, setCustomerQuestions] = useState<CustomerQuestion[]>([]);
+    const [financialRequests, setFinancialRequests] = useState<FinancialRequest[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
 
-    // Fetch requested properties on mount
+    // Fetch all data on mount
     useEffect(() => {
-        fetchRequestedProperties();
+        fetchAllLeadsData();
     }, []);
 
-    const fetchRequestedProperties = async (isRefresh = false) => {
+    const fetchAllLeadsData = async (isRefresh = false) => {
         if (isRefresh) {
             setRefreshing(true);
         } else {
@@ -155,60 +259,89 @@ export default function LeadPage() {
                 throw new Error('Agent ID not found. Please login again.');
             }
 
-            // Replace {agentId} in endpoint
-            const endpoint = AGENT_AUTH_ENDPOINTS.PROPERTIES.replace('{agentId}', agentId);
+            // Fetch all three endpoints in parallel
+            const [propertiesResponse, questionsResponse, financialResponse] = await Promise.all([
+                // Fetch requested properties
+                fetch(`${BASE_URL}${AGENT_AUTH_ENDPOINTS.PROPERTIES.replace('{agentId}', agentId)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }),
+                // Fetch customer questions
+                fetch(`${BASE_URL}${AGENT_AUTH_ENDPOINTS.GET_ALL_CUSTOMER_QUESTIONS(agentId)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }),
+                // Fetch financial requests
+                fetch(`${BASE_URL}${AGENT_AUTH_ENDPOINTS.GET_ALL_FINANCIAL_REQUEST(agentId)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }),
+            ]);
 
-            console.log('Fetching requested properties from:', `${BASE_URL}${endpoint}`);
+            // Parse all responses
+            const propertiesResult = await propertiesResponse.json();
+            const questionsResult = await questionsResponse.json();
+            const financialResult = await financialResponse.json();
 
-            const response = await fetch(`${BASE_URL}${endpoint}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+            console.log('Properties result:', propertiesResult);
+            console.log('Questions result:', questionsResult);
+            console.log('Financial result:', financialResult);
 
-            console.log('Requested properties response status:', response.status);
-
-            let result;
-            try {
-                result = await response.json();
-                console.log('Requested properties response:', result);
-            } catch (parseError) {
-                console.error('Failed to parse response:', parseError);
-                throw new Error('Invalid server response');
+            // Set properties
+            if (propertiesResponse.ok && propertiesResult.responseCode === '00') {
+                const leadsData = propertiesResult.responseData || [];
+                leadsData.sort((a: Property, b: Property) =>
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+                setLeads(leadsData);
+            } else {
+                setLeads([]);
             }
 
-            if (!response.ok || result.responseCode !== '00') {
-                const errorMessage = result?.responseMessage || result?.message || 'Failed to fetch leads';
-                throw new Error(errorMessage);
+            // Set customer questions
+            if (questionsResponse.ok && questionsResult.responseCode === '00') {
+                setCustomerQuestions(questionsResult.responseData || []);
+            } else {
+                setCustomerQuestions([]);
             }
 
-            // Set properties from responseData
-            const leadsData = result.responseData || [];
+            // Set financial requests
+            if (financialResponse.ok && financialResult.responseCode === '00') {
+                setFinancialRequests(financialResult.responseData || []);
+            } else {
+                setFinancialRequests([]);
+            }
 
-            // Sort by most recent first
-            leadsData.sort((a: Property, b: Property) =>
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
+            const totalLeads = (propertiesResult.responseData?.length || 0) +
+                             (questionsResult.responseData?.length || 0) +
+                             (financialResult.responseData?.length || 0);
 
-            setLeads(leadsData);
-
-            if (isRefresh && leadsData.length > 0) {
+            if (isRefresh && totalLeads > 0) {
                 Toast.show({
                     type: 'success',
                     text1: 'Leads Refreshed',
-                    text2: `Found ${leadsData.length} lead${leadsData.length !== 1 ? 's' : ''}`,
+                    text2: `Found ${totalLeads} total lead${totalLeads !== 1 ? 's' : ''}`,
                 });
             }
         } catch (error: any) {
-            console.error('Fetch requested properties error:', error);
+            console.error('Fetch leads error:', error);
             Toast.show({
                 type: 'error',
                 text1: 'Error',
                 text2: error.message || 'Failed to load leads',
             });
             setLeads([]);
+            setCustomerQuestions([]);
+            setFinancialRequests([]);
         } finally {
             setIsLoading(false);
             setRefreshing(false);
@@ -216,8 +349,11 @@ export default function LeadPage() {
     };
 
     const handleRefresh = () => {
-        fetchRequestedProperties(true);
+        fetchAllLeadsData(true);
     };
+
+    const totalLeadsCount = leads.length + customerQuestions.length + financialRequests.length;
+    const hasAnyLeads = totalLeadsCount > 0;
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -226,9 +362,9 @@ export default function LeadPage() {
                 <View style={{ width: 28 }} />
                 <View style={styles.headerCenter}>
                     <Text style={styles.headerTitle}>Lead</Text>
-                    {leads.length > 0 && (
+                    {hasAnyLeads && (
                         <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{leads.length}</Text>
+                            <Text style={styles.badgeText}>{totalLeadsCount}</Text>
                         </View>
                     )}
                 </View>
@@ -253,32 +389,54 @@ export default function LeadPage() {
                             <ActivityIndicator size="large" color="#DD7800" />
                             <Text style={styles.loadingText}>Loading leads...</Text>
                         </View>
-                    ) : leads.length > 0 ? (
+                    ) : hasAnyLeads ? (
                         <>
                             {/* Leads Count */}
                             <View style={styles.countContainer}>
                                 <Text style={styles.countText}>
-                                    {leads.length} {leads.length === 1 ? 'Lead' : 'Leads'}
+                                    {totalLeadsCount} {totalLeadsCount === 1 ? 'Lead' : 'Leads'}
                                 </Text>
                                 <Text style={styles.countSubtext}>
-                                    {leads.filter(l => {
-                                        const hours = Math.floor((new Date().getTime() - new Date(l.createdAt).getTime()) / (1000 * 60 * 60));
-                                        return hours < 24;
-                                    }).length} new today
+                                    {leads.length} properties • {customerQuestions.length} questions • {financialRequests.length} financial
                                 </Text>
                             </View>
 
-                            {/* Leads List */}
-                            {leads.map((lead, index) => (
-                                <LeadCard key={lead.propertyId || index} property={lead} />
-                            ))}
+                            {/* Property Requests */}
+                            {leads.length > 0 && (
+                                <>
+                                    <Text style={styles.sectionTitle}>Property Requests</Text>
+                                    {leads.map((lead, index) => (
+                                        <LeadCard key={lead.propertyId || index} property={lead} />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Customer Questions */}
+                            {customerQuestions.length > 0 && (
+                                <>
+                                    <Text style={styles.sectionTitle}>Customer Questions</Text>
+                                    {customerQuestions.map((question, index) => (
+                                        <CustomerQuestionCard key={question.id || index} question={question} />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Financial Requests */}
+                            {financialRequests.length > 0 && (
+                                <>
+                                    <Text style={styles.sectionTitle}>Financial Requests</Text>
+                                    {financialRequests.map((request, index) => (
+                                        <FinancialRequestCard key={request.id || index} request={request} />
+                                    ))}
+                                </>
+                            )}
                         </>
                     ) : (
                         <View style={styles.emptyContainer}>
                             <Ionicons name="people-outline" size={80} color="#ccc" />
                             <Text style={styles.emptyText}>No leads yet</Text>
                             <Text style={styles.emptySubtext}>
-                                You don't have any requested properties at the moment.
+                                You don't have any property requests, customer questions, or financial requests at the moment.
                             </Text>
                             <TouchableOpacity
                                 style={styles.refreshButton}
@@ -535,5 +693,159 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#fff',
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#000',
+        marginTop: 24,
+        marginBottom: 12,
+    },
+    questionBadge: {
+        backgroundColor: '#FFF3E0',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    questionBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#DD7800',
+    },
+    financialBadge: {
+        backgroundColor: '#D1FAE5',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    financialBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#10B981',
+    },
+    contactInfo: {
+        marginTop: 12,
+        marginBottom: 12,
+        gap: 8,
+    },
+    contactRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    contactText: {
+        fontSize: 14,
+        color: '#666',
+    },
+    agentInfo: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: 12,
+        marginTop: 12,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    agentLabel: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#999',
+        marginBottom: 4,
+        textTransform: 'uppercase',
+    },
+    agentName: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#000',
+        marginBottom: 2,
+    },
+    agentContact: {
+        fontSize: 13,
+        color: '#666',
+    },
+    financialDetails: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 12,
+        gap: 12,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    financialRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    financialLabel: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+    },
+    financialValue: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#10B981',
+    },
+    propertySection: {
+        marginTop: 12,
+        padding: 12,
+        backgroundColor: '#FFF7ED',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#FFEDD5',
+    },
+    propertySectionLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#999',
+        marginBottom: 8,
+        textTransform: 'uppercase',
+    },
+    propertyRowCompact: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    propertyInfoCompact: {
+        flex: 1,
+        paddingRight: 12,
+    },
+    propertyNameCompact: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#000',
+        marginBottom: 4,
+    },
+    propertyAddressCompact: {
+        fontSize: 13,
+        color: '#666',
+        marginBottom: 6,
+    },
+    propertyPriceCompact: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#DD7800',
+    },
+    propertyImageSmall: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        backgroundColor: '#f0f0f0',
+    },
+    customerInfo: {
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#F3F4F6',
+    },
+    customerLabel: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#999',
+        marginBottom: 4,
+        textTransform: 'uppercase',
+    },
+    customerEmail: {
+        fontSize: 14,
+        color: '#666',
     },
 });

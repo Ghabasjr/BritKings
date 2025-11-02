@@ -27,7 +27,7 @@ const PropertyCard = ({ property }: { property: Property }) => (
                 </View>
             </View>
             <View style={leadStyles.priceRow}>
-                <Text style={leadStyles.price}>${property.price?.toLocaleString()}</Text>
+                <Text style={leadStyles.price}>₦{property.price?.toLocaleString()}</Text>
                 <Text style={leadStyles.available}>
                     {property.available ? 'Active' : 'Inactive'}
                 </Text>
@@ -37,11 +37,7 @@ const PropertyCard = ({ property }: { property: Property }) => (
                     <Ionicons name="location-sharp" size={16} color="#DD7800" />
                     <Text style={leadStyles.address} numberOfLines={2}>{property.address}</Text>
                 </View>
-                <Text style={leadStyles.details}>
-                    {property.bedrooms} Beds | {property.bathroom} Bath | {property.size?.toLocaleString()} sq ft
-                </Text>
-                {property.parking && <Text style={leadStyles.details}>Parking: {property.parking}</Text>}
-                {property.pools && <Text style={leadStyles.details}>Pools: {property.pools}</Text>}
+
             </View>
             {property.description && (
                 <View style={leadStyles.messageContainer}>
@@ -199,7 +195,7 @@ export default function AgentDashboard() {
     const [agentId, setAgentId] = useState<string>('');
     const [agentName, setAgentName] = useState<string>('Agent');
 
-    const filterOptions = ['All', 'AVAILABLE', 'SOLD', 'PENDING'];
+    const filterOptions = ['All', 'AVAILABLE', 'SOLD'];
 
     // Load agent ID and name on mount
     useEffect(() => {
@@ -267,7 +263,7 @@ export default function AgentDashboard() {
     // Calculate stats from properties
     const stats = {
         newLead: properties.filter(p => p.status === 'AVAILABLE').length,
-        inProgress: properties.filter(p => p.status === 'PENDING').length,
+        // inProgress: properties.filter(p => p.status === 'PENDING').length,
         closed: properties.filter(p => p.status === 'SOLD').length,
         respondRate: properties.length > 0
             ? Math.round((properties.filter(p => p.available).length / properties.length) * 100)
@@ -302,10 +298,10 @@ export default function AgentDashboard() {
                                 <Text style={styles.statNumber}>{stats.newLead}</Text>
                                 <Text style={styles.statLabel}>Available</Text>
                             </View>
-                            <View style={styles.statCard}>
+                            {/* <View style={styles.statCard}>
                                 <Text style={styles.statNumber}>{stats.inProgress}</Text>
                                 <Text style={styles.statLabel}>Pending</Text>
-                            </View>
+                            </View> */}
                         </View>
                         <View style={styles.statsRow}>
                             <View style={styles.statCard}>

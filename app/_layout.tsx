@@ -7,8 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
 import 'react-native-reanimated';
+import { PaystackProvider } from 'react-native-paystack-webview';
 import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';
+import { PAYSTACK_PUBLIC_KEY } from '../constants/api';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { store } from '../store';
 import { restoreAuth } from '../store/slices/authSlice';
@@ -66,13 +68,14 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-        >
-          <Stack>
+      <PaystackProvider publicKey={PAYSTACK_PUBLIC_KEY}>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          // keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+          >
+            <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
@@ -104,11 +107,17 @@ export default function RootLayout() {
             <Stack.Screen name='ContactSuccess' options={{ headerShown: false }} />
             <Stack.Screen name='Messages' options={{ headerShown: false }} />
             <Stack.Screen name='ChatDetail' options={{ headerShown: false }} />
-          </Stack>
-        </KeyboardAvoidingView>
-        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      </ThemeProvider>
-      <Toast />
+            <Stack.Screen name='RequestFinancing' options={{ headerShown: false }} />
+            <Stack.Screen name='ScheduleVisit' options={{ headerShown: false }} />
+            <Stack.Screen name='AskQuestion' options={{ headerShown: false }} />
+            <Stack.Screen name='SecureCheckout' options={{ headerShown: false }} />
+            <Stack.Screen name='PaymentSuccess' options={{ headerShown: false }} />
+            </Stack>
+          </KeyboardAvoidingView>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        </ThemeProvider>
+        <Toast />
+      </PaystackProvider>
     </Provider>
   );
 }

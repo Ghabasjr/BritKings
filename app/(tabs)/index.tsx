@@ -1,4 +1,5 @@
 import FilterModal from '@/components/FilterModal/FilterModal';
+import GradientButton from '@/components/GradientButton/GradientButton';
 import { BASE_URL, CSTOMER_AUTH_ENDPOINTS } from '@/constants/api';
 import { fetchWithAuth } from '@/utils/authGuard';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,10 +15,6 @@ interface Property {
     address: string;
     description: string;
     size: number;
-    bedrooms: string;
-    parking: string;
-    bathroom: string;
-    pools: string;
     price: number;
     status: string;
     propertyImageUrl: string;
@@ -28,136 +25,141 @@ interface Property {
 }
 
 // Property Card Component matching the new design
-const PropertyCard = ({ property }: { property: Property }) => (
-    <TouchableOpacity
-        style={propertyStyles.card}
-        onPress={() => router.push(`/PropertyDetails?propertyId=${property.propertyId}`)}
-    >
+const PropertyCard = ({ property, onContactAgent }: { property: Property, onContactAgent: (property: Property) => void }) => (
+    <View style={propertyStyles.card}>
         <View style={propertyStyles.imageContainer}>
             <Image
                 source={{ uri: property.propertyImageUrl || 'https://placehold.co/600x400/e0e0e0/555?text=Property' }}
                 style={propertyStyles.image}
             />
-            <View style={propertyStyles.typeTag}>
-                <Text style={propertyStyles.typeText}>{property.status}</Text>
-            </View>
             <TouchableOpacity style={propertyStyles.favoriteButton}>
-                <Ionicons name="heart" size={24} color="#DD7800" />
+                <Ionicons name="heart-outline" size={20} color="#666" />
             </TouchableOpacity>
         </View>
         <View style={propertyStyles.content}>
-            <View style={propertyStyles.priceRow}>
-                <Text style={propertyStyles.price}>${property.price?.toLocaleString()}</Text>
-                <View style={propertyStyles.locationRow}>
-                    <Ionicons name="location-sharp" size={16} color="#666" />
-                    <Text style={propertyStyles.locationText}>{property.address}</Text>
-                </View>
+            <View style={propertyStyles.locationRow}>
+                <Ionicons name="location-sharp" size={16} color="#666" />
+                <Text style={propertyStyles.locationText} numberOfLines={2}>
+                    {property.address}
+                </Text>
             </View>
             <View style={propertyStyles.detailsRow}>
-                <Text style={propertyStyles.detailsText}>{property.bedrooms} beds</Text>
-                <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{property.bathroom} bath</Text>
-                <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{property.size?.toLocaleString()} sqft - {property.status}</Text>
+                <Text style={propertyStyles.detailsText}> Address: {property.address} </Text>
+                <Text style={propertyStyles.detailsText}>Size: {property.size} sqft </Text>
+                <Text style={propertyStyles.detailsText}>Price: ₦{property.price} </Text>
+                <Text style={propertyStyles.detailsText}>Status: {property.status} </Text>
             </View>
-            <Text style={propertyStyles.address}>{property.address}</Text>
+
+            {/* buttons  */}
+            <View style={{ marginTop: 8, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: "center" }}>
+
+                <TouchableOpacity
+                    style={propertyStyles.viewListingButton}
+                    onPress={() => router.push(`/PropertyDetails?propertyId=${property.propertyId}`)}
+                >
+                    <Text style={propertyStyles.viewListingText}>View Listing</Text>
+                </TouchableOpacity>
+
+                <GradientButton
+                    title='Contact Agent'
+                    onPress={() => onContactAgent(property)}
+                />
+            </View>
         </View>
-    </TouchableOpacity>
+    </View>
 );
 
 const propertyStyles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
-        borderRadius: 20,
-        marginBottom: 20,
+        borderRadius: 16,
+        marginBottom: 16,
+        marginHorizontal: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
         shadowRadius: 8,
         elevation: 3,
         overflow: 'hidden',
+        width: "100%",
     },
     imageContainer: {
         position: 'relative',
         width: '100%',
-        height: 250,
+        height: 180,
     },
     image: {
         width: '100%',
         height: '100%',
-    },
-    typeTag: {
-        position: 'absolute',
-        top: 16,
-        left: 16,
-        backgroundColor: '#DD7800',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-    },
-    typeText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#fff',
+        backgroundColor: '#f0f0f0',
     },
     favoriteButton: {
         position: 'absolute',
-        top: 16,
-        right: 16,
+        top: 12,
+        right: 12,
         backgroundColor: '#fff',
-        borderRadius: 25,
-        width: 50,
-        height: 50,
+        borderRadius: 20,
+        width: 32,
+        height: 32,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowRadius: 2,
+        elevation: 2,
     },
     content: {
-        padding: 16,
-    },
-    priceRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    price: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1a1a1a',
+        padding: 12,
     },
     locationRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-    },
-    locationText: {
-        fontSize: 14,
-        color: '#666',
-        marginLeft: 4,
-    },
-    detailsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: 8,
     },
+    locationText: {
+        fontSize: 13,
+        color: '#333',
+        marginLeft: 4,
+        flex: 1,
+        fontWeight: '500',
+    },
+    detailsRow: {
+        display: "contents",
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
     detailsText: {
-        fontSize: 14,
+        fontSize: 11,
         color: '#888',
     },
     separator: {
-        fontSize: 14,
-        color: '#ddd',
-        marginHorizontal: 8,
+        fontSize: 11,
+        color: '#888',
+        marginHorizontal: 6,
     },
-    address: {
-        fontSize: 14,
+    viewListingButton: {
+        marginBottom: 8,
+        alignItems: 'center',
+        paddingVertical: 4,
+    },
+    viewListingText: {
+        fontSize: 13,
         color: '#666',
-        marginTop: 4,
-    }
+        textDecorationLine: 'underline',
+    },
+    contactAgentButton: {
+        backgroundColor: '#DD7800',
+        borderRadius: 20,
+        paddingVertical: 10,
+        alignItems: 'center',
+    },
+    contactAgentText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#fff',
+    },
 });
 
 export default function RealEstateHomePage() {
@@ -168,12 +170,20 @@ export default function RealEstateHomePage() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [activeTab, setActiveTab] = useState('buy');
     const [showSellModal, setShowSellModal] = useState(false);
+    const [showContactModal, setShowContactModal] = useState(false);
+    const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
     // Form states for sell modal
     const [propertyName, setPropertyName] = useState('');
     const [propertyPrice, setPropertyPrice] = useState('');
     const [propertyLocation, setPropertyLocation] = useState('');
     const [propertySize, setPropertySize] = useState('');
+
+    // Handle contact agent
+    const handleContactAgent = (property: Property) => {
+        setSelectedProperty(property);
+        setShowContactModal(true);
+    };
 
     // Fetch properties on mount
     useEffect(() => {
@@ -259,9 +269,9 @@ export default function RealEstateHomePage() {
                             Find Your Best{'\n'}Real Estate
                         </Text>
                         <View style={styles.headerIcons}>
-                            <TouchableOpacity onPress={() => router.push('/Messages')} style={styles.iconButton}>
+                            {/* <TouchableOpacity onPress={() => router.push('/Messages')} style={styles.iconButton}>
                                 <Ionicons name="chatbubble-outline" size={24} color="#333" />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                             <TouchableOpacity onPress={() => router.push('/notification')} style={styles.iconButton}>
                                 <Ionicons name="notifications-outline" size={24} color="#333" />
                             </TouchableOpacity>
@@ -314,9 +324,15 @@ export default function RealEstateHomePage() {
                                 <Text style={styles.loadingText}>Loading properties...</Text>
                             </View>
                         ) : properties.length > 0 ? (
-                            properties.map((property) => (
-                                <PropertyCard key={property.propertyId} property={property} />
-                            ))
+                            <View style={styles.propertyGrid}>
+                                {properties.map((property) => (
+                                    <PropertyCard
+                                        key={property.propertyId}
+                                        property={property}
+                                        onContactAgent={handleContactAgent}
+                                    />
+                                ))}
+                            </View>
                         ) : (
                             <View style={styles.emptyContainer}>
                                 <Ionicons name="home-outline" size={64} color="#ccc" />
@@ -424,6 +440,71 @@ export default function RealEstateHomePage() {
                     </View>
                 </View>
             </Modal>
+
+            {/* Contact Agent Modal */}
+            <Modal
+                visible={showContactModal}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setShowContactModal(false)}
+            >
+                <View style={contactModalStyles.overlay}>
+                    <View style={contactModalStyles.bottomSheet}>
+                        <View style={contactModalStyles.handle} />
+
+                        <Text style={contactModalStyles.title}>Contact Agent</Text>
+
+                        <TouchableOpacity
+                            style={contactModalStyles.actionButton}
+                            onPress={() => {
+                                setShowContactModal(false);
+                                router.push({
+                                    pathname: '/RequestFinancing',
+                                    params: { propertyId: selectedProperty?.propertyId }
+                                });
+                            }}
+                        >
+                            <Ionicons name="card-outline" size={20} color="#fff" />
+                            <Text style={contactModalStyles.actionButtonText}>Request Financing Info</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={contactModalStyles.actionButton}
+                            onPress={() => {
+                                setShowContactModal(false);
+                                router.push({
+                                    pathname: '/ScheduleVisit',
+                                    params: { propertyId: selectedProperty?.propertyId }
+                                });
+                            }}
+                        >
+                            <Ionicons name="calendar-outline" size={20} color="#fff" />
+                            <Text style={contactModalStyles.actionButtonText}>Schedule a Visit</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={contactModalStyles.actionButton}
+                            onPress={() => {
+                                setShowContactModal(false);
+                                router.push({
+                                    pathname: '/AskQuestion',
+                                    params: { propertyId: selectedProperty?.propertyId }
+                                });
+                            }}
+                        >
+                            <Ionicons name="help-circle-outline" size={20} color="#fff" />
+                            <Text style={contactModalStyles.actionButtonText}>Ask a Question</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={contactModalStyles.cancelButton}
+                            onPress={() => setShowContactModal(false)}
+                        >
+                            <Text style={contactModalStyles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -432,7 +513,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 25
+        paddingTop: 20
     },
     scrollView: {
         flex: 1,
@@ -520,6 +601,12 @@ const styles = StyleSheet.create({
     },
     propertyList: {
         marginBottom: 20,
+    },
+    propertyGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        gap: 12,
     },
     loadingContainer: {
         flex: 1,
@@ -617,5 +704,97 @@ const sellModalStyles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: '#fff',
+    },
+});
+
+const contactModalStyles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    bottomSheet: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        paddingBottom: 40,
+    },
+    handle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#E0E0E0',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#000',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    propertyInfo: {
+        flexDirection: 'row',
+        backgroundColor: '#F8F8F8',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 24,
+    },
+    propertyImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        backgroundColor: '#E0E0E0',
+    },
+    propertyDetails: {
+        flex: 1,
+        marginLeft: 12,
+        justifyContent: 'center',
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    locationText: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+        marginLeft: 4,
+        flex: 1,
+    },
+    propertySpecs: {
+        fontSize: 12,
+        color: '#888',
+    },
+    actionButton: {
+        backgroundColor: '#DD7800',
+        borderRadius: 12,
+        paddingVertical: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+        gap: 8,
+    },
+    actionButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#fff',
+    },
+    cancelButton: {
+        borderWidth: 1.5,
+        borderColor: '#E0E0E0',
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#666',
     },
 });

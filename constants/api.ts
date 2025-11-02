@@ -1,5 +1,5 @@
 // Base URL for API
-export const BASE_URL = 'https://britkings-backend-dbb2700a6f0d.herokuapp.com';
+export const BASE_URL = 'https://britkings-real-estate-backend-81b1cd203051.herokuapp.com';
 
 // API Version
 const API_VERSION = '/api/v1';
@@ -30,6 +30,16 @@ export const AGENT_AUTH_ENDPOINTS = {
   SOLD_PROPERTY: `${API_VERSION}/agent/{agentId}/sold-properties`,
   REQUESTED_PROPERTIES: `${API_VERSION}/agent/{agentId}/requested-properties`,
   PROPERTIES: `${API_VERSION}/agent/{agentId}/properties`,
+  GET_ALL_FINANCIAL_REQUEST: (agentId: string) => `${API_VERSION}/agent/${agentId}/get-all-financial-request`,
+  GET_ALL_CUSTOMER_QUESTIONS: (agentId: string) => `${API_VERSION}/agent/${agentId}/get-all-customer-questions`,
+};
+
+// Payment endpoints
+export const PAYMENT_ENDPOINTS = {
+  INITIATE_PAYMENT: `${API_VERSION}/payment/initiate-payment`,
+  VERIFY_PAYMENT: `${API_VERSION}/payment/verify-payment`,
+  GET_USER_TRANSACTIONS: `${API_VERSION}/payment/transactions`,
+  GET_TRANSACTION_BY_ID: (transactionId: string) => `${API_VERSION}/payment/transactions/${transactionId}`,
 };
 
 
@@ -40,8 +50,18 @@ export const PROPERTIES_ENDPOINTS = {
   SEARCH: `${API_VERSION}/properties`,
 };
 
+// Client endpoints (for property buyers/customers)
+export const CLIENT_ENDPOINTS = {
+  REQUEST_FINANCIAL_INFO: `${API_VERSION}/client/financial-request`,
+  ASK_QUESTION: `${API_VERSION}/client/askQuestion`,
+  CONTACT_AGENT: `${API_VERSION}/client/contact-agent`,
+};
+
 // Helper function to build full URLs
 export const buildUrl = (endpoint: string): string => {
   return `${BASE_URL}${endpoint}`;
 };
+
+// Paystack Public Key
+export const PAYSTACK_PUBLIC_KEY = process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_f1492ce547789aeecf6e0b6fa10001d475142e48';
 
