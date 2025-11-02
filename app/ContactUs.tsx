@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
     FlatList,
+    KeyboardAvoidingView,
+    Platform,
     SafeAreaView,
     StatusBar,
     StyleSheet,
@@ -90,7 +92,11 @@ const ContactUsScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+            >
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -136,6 +142,7 @@ const ContactUsScreen = () => {
                         onPress={handleNewSubmission} title={'New Submission'} />
                 </View>
             </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };

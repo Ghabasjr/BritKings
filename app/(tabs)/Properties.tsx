@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
-// Property Card Component for Clients
 const ClientPropertyCard = ({ property }: any) => (
     <View style={propertyStyles.card}>
         <View style={propertyStyles.imageContainer}>
@@ -14,9 +13,7 @@ const ClientPropertyCard = ({ property }: any) => (
                 source={{ uri: property.propertyImageUrl || 'https://placehold.co/600x400/e0e0e0/555?text=Property' }}
                 style={propertyStyles.image}
             />
-            {/* <View style={propertyStyles.typeTag}>
-                <Text style={propertyStyles.typeText}>{property.status}</Text>
-            </View> */}
+
             <View style={[
                 propertyStyles.typeTag,
                 property.status === 'SOLD' && propertyStyles.soldTag,
@@ -39,10 +36,6 @@ const ClientPropertyCard = ({ property }: any) => (
                 </View>
             </View>
             <View style={propertyStyles.detailsRow}>
-                <Text style={propertyStyles.detailsText}>{property.bedrooms} beds</Text>
-                <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{property.bathroom} bath</Text>
-                <Text style={propertyStyles.separator}>|</Text>
                 <Text style={propertyStyles.detailsText}>{property.size?.toLocaleString()} sqft - {property.status}</Text>
             </View>
             <Text style={propertyStyles.address} numberOfLines={1}>{property.address}</Text>
@@ -57,7 +50,7 @@ const ClientPropertyCard = ({ property }: any) => (
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={propertyStyles.proceedButton}
-                    onPress={() => router.push('/paymentPage')}
+                    onPress={() => router.push('/RequestFinancing')}
                 >
                     <Text style={propertyStyles.proceedText}>Proceed To Pay</Text>
                 </TouchableOpacity>
@@ -83,7 +76,7 @@ const AgentPropertyCard = ({ property, onViewBuyer, isSold }: any) => (
         </View>
         <View style={propertyStyles.content}>
             <View style={propertyStyles.priceRow}>
-                <Text style={propertyStyles.price}>${property.price?.toLocaleString()}</Text>
+                <Text style={propertyStyles.price}>₦{property.price?.toLocaleString()}</Text>
                 <View style={propertyStyles.locationRow}>
                     <Ionicons name="location-sharp" size={16} color="#666" />
                     <Text style={propertyStyles.locationText} numberOfLines={1}>
@@ -92,10 +85,6 @@ const AgentPropertyCard = ({ property, onViewBuyer, isSold }: any) => (
                 </View>
             </View>
             <View style={propertyStyles.detailsRow}>
-                <Text style={propertyStyles.detailsText}>{property.bedrooms} beds</Text>
-                <Text style={propertyStyles.separator}>|</Text>
-                <Text style={propertyStyles.detailsText}>{property.bathroom} bath</Text>
-                <Text style={propertyStyles.separator}>|</Text>
                 <Text style={propertyStyles.detailsText}>
                     {property.size?.toLocaleString()} sqft - {property.available ? 'Active' : 'Inactive'}
                 </Text>
@@ -310,13 +299,11 @@ export default function PropertiesPage() {
 
     // Fetch properties based on active tab
     useEffect(() => {
-        // Only fetch if BOTH userRole is loaded AND activeTab is set
         if (activeTab && userRole !== null) {
             fetchProperties();
         }
     }, [activeTab, userRole]);
 
-    // Filter properties based on search query
     useEffect(() => {
         if (searchQuery.trim() === '') {
             setFilteredProperties(properties);
@@ -348,7 +335,6 @@ export default function PropertiesPage() {
             };
 
             if (userRole === 'Agent') {
-                // Agent endpoints
                 let agentId = '';
                 if (userDataString) {
                     try {
@@ -384,22 +370,11 @@ export default function PropertiesPage() {
                     throw new Error('User email or phone not found. Please login again.');
                 }
 
-                const baseEndpoint = activeTab === 'want to buy'
-                    ? CSTOMER_AUTH_ENDPOINTS.CONTACTED_PROPERTY
-                    : CSTOMER_AUTH_ENDPOINTS.PURCHASED_PROPERTIES;
-
-                endpoint = `${baseEndpoint}?emailOrPhone=${encodeURIComponent(emailOrPhone)}`;
+                endpoint = `${CSTOMER_AUTH_ENDPOINTS.CONTACTED_PROPERTY}?emailOrPhone=${encodeURIComponent(emailOrPhone)}`;
             }
 
             console.log('Fetching properties from:', `${BASE_URL}${endpoint}`);
-            // const propertiesData = result.responseData || [];
-            // let filteredData = propertiesData;
-            // if (userRole === 'Client' && activeTab === 'Purchased Properties') {
-            //     filteredData = propertiesData.filter((prop: Property) => prop.status === 'SOLD');
-            // }
 
-            // setProperties(filteredData);
-            // setFilteredProperties(filteredData);
 
             const response = await fetch(`${BASE_URL}${endpoint}`, {
                 method: 'GET',
@@ -424,14 +399,8 @@ export default function PropertiesPage() {
 
             const propertiesData = result.responseData || [];
 
-            // Filter purchased properties to only show SOLD items
-            let filteredData = propertiesData;
-            if (userRole === 'Client' && activeTab === 'Purchased Properties') {
-                filteredData = propertiesData.filter((prop: Property) => prop.status === 'SOLD');
-            }
-
-            setProperties(filteredData);
-            setFilteredProperties(filteredData);
+            setProperties(propertiesData);
+            setFilteredProperties(propertiesData);
         } catch (error: any) {
             console.error('Fetch properties error:', error);
             Toast.show({
@@ -465,7 +434,6 @@ export default function PropertiesPage() {
         } else {
             return [
                 { label: 'want to buy', value: 'want to buy' },
-                { label: 'Purchased Properties', value: 'Purchased Properties' },
             ];
         }
     };
@@ -476,9 +444,7 @@ export default function PropertiesPage() {
                 ? "You don't have any assigned properties yet"
                 : "You haven't sold any properties yet";
         } else {
-            return activeTab === 'want to buy'
-                ? "You haven't contacted any properties yet"
-                : "You haven't purchased any properties yet";
+            return "You haven't contacted any properties yet";
         }
     };
 

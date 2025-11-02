@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    KeyboardAvoidingView,
+    Platform,
     SafeAreaView,
     ScrollView,
     StatusBar,
@@ -14,6 +16,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BASE_URL, CLIENT_ENDPOINTS } from '../constants/api';
+import { fetchWithAuth } from '@/utils/authGuard';
 
 const AskQuestionScreen = () => {
     const params = useLocalSearchParams();
@@ -97,12 +100,13 @@ const AskQuestionScreen = () => {
                 phone,
                 agentId
             };
-            const res = await fetch(`${BASE_URL}${CLIENT_ENDPOINTS.ASK_QUESTION}`, {
+            const res = await fetchWithAuth(`${BASE_URL}${CLIENT_ENDPOINTS.ASK_QUESTION}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            const result = await res.json();
+            const raw = await res.text();
+            const result = raw ? JSON.parse(raw) : {};
             if (!res.ok || result.responseCode !== '00') {
                 throw new Error(result?.responseMessage || result?.message || 'Failed to submit question');
             }
@@ -126,7 +130,11 @@ const AskQuestionScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+            >
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -216,6 +224,7 @@ const AskQuestionScreen = () => {
                     </Text>
                 </TouchableOpacity>
             </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };

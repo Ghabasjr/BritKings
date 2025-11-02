@@ -30,7 +30,6 @@ export const AGENT_AUTH_ENDPOINTS = {
   SOLD_PROPERTY: `${API_VERSION}/agent/{agentId}/sold-properties`,
   REQUESTED_PROPERTIES: `${API_VERSION}/agent/{agentId}/requested-properties`,
   PROPERTIES: `${API_VERSION}/agent/{agentId}/properties`,
-  // New Endpoints
   GET_ALL_FINANCIAL_REQUEST: (agentId: string) => `${API_VERSION}/agent/${agentId}/get-all-financial-request`,
   GET_ALL_CUSTOMER_QUESTIONS: (agentId: string) => `${API_VERSION}/agent/${agentId}/get-all-customer-questions`,
 };
@@ -38,6 +37,9 @@ export const AGENT_AUTH_ENDPOINTS = {
 // Payment endpoints
 export const PAYMENT_ENDPOINTS = {
   INITIATE_PAYMENT: `${API_VERSION}/payment/initiate-payment`,
+  VERIFY_PAYMENT: `${API_VERSION}/payment/verify-payment`,
+  GET_USER_TRANSACTIONS: `${API_VERSION}/payment/transactions`,
+  GET_TRANSACTION_BY_ID: (transactionId: string) => `${API_VERSION}/payment/transactions/${transactionId}`,
 };
 
 
@@ -61,5 +63,5 @@ export const buildUrl = (endpoint: string): string => {
 };
 
 // Paystack Public Key
-export const PAYSTACK_PUBLIC_KEY = process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_your_public_key_here';
+export const PAYSTACK_PUBLIC_KEY = process.env.EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_f1492ce547789aeecf6e0b6fa10001d475142e48';
 

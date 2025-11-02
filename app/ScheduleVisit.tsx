@@ -3,6 +3,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
+    KeyboardAvoidingView,
+    Platform,
     SafeAreaView,
     ScrollView,
     StatusBar,
@@ -14,6 +16,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BASE_URL, CLIENT_ENDPOINTS } from '../constants/api';
+import { fetchWithAuth } from '@/utils/authGuard';
 
 const ScheduleVisitScreen = () => {
     const params = useLocalSearchParams();
@@ -143,12 +146,13 @@ const ScheduleVisitScreen = () => {
                 alternateVisitDateTime,
                 customerPhone: phone
             };
-            const res = await fetch(`${BASE_URL}${CLIENT_ENDPOINTS.CONTACT_AGENT}`, {
+            const res = await fetchWithAuth(`${BASE_URL}${CLIENT_ENDPOINTS.CONTACT_AGENT}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            const result = await res.json();
+            const raw = await res.text();
+            const result = raw ? JSON.parse(raw) : {};
             if (!res.ok || result.responseCode !== '00') {
                 throw new Error(result?.responseMessage || result?.message || 'Failed to schedule visit');
             }
@@ -172,7 +176,11 @@ const ScheduleVisitScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+            >
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -298,6 +306,7 @@ const ScheduleVisitScreen = () => {
                     </Text>
                 </TouchableOpacity>
             </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };

@@ -327,38 +327,34 @@ export default function PropertyDetailsScreen() {
           </View>
         ) : property ? (
           <>
-            {/* Map View (OpenStreetMap via react-native-maps tiles) */}
+            {/* Map View (OpenStreetMap) */}
             <View style={styles.mapContainer}>
-              {Platform.OS === "web" ? (
-                mapCoords ? (
-                  <WebView
-                    style={{ flex: 1 }}
-                    source={{
-                      uri: (() => {
-                        const lat = mapCoords.latitude as number;
-                        const lon = mapCoords.longitude as number;
-                        const delta = 0.005;
-                        const left = lon - delta;
-                        const right = lon + delta;
-                        const top = lat + delta;
-                        const bottom = lat - delta;
-                        const bbox = `${left},${bottom},${right},${top}`;
-                        return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
-                          bbox
-                        )}&layer=mapnik&marker=${encodeURIComponent(
-                          lat
-                        )},${encodeURIComponent(lon)}`;
-                      })(),
-                    }}
-                  />
-                ) : (
-                  <View style={styles.mapPlaceholder}>
-                    <Ionicons name="map" size={40} color="#999" />
-                    <Text style={styles.mapPlaceholderText}>
-                      {property.address}
-                    </Text>
-                  </View>
-                )
+              {Platform.OS === "android" || Platform.OS === "web" ? (
+                <WebView
+                  style={{ flex: 1 }}
+                  source={{
+                    uri: (() => {
+                      const lat = (mapCoords?.latitude ??
+                        defaultRegion.latitude) as number;
+                      const lon = (mapCoords?.longitude ??
+                        defaultRegion.longitude) as number;
+                      const delta = mapCoords ? 0.005 : 0.05;
+                      const left = lon - delta;
+                      const right = lon + delta;
+                      const top = lat + delta;
+                      const bottom = lat - delta;
+                      const bbox = `${left},${bottom},${right},${top}`;
+                      const base = `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
+                        bbox
+                      )}&layer=mapnik`;
+                      return mapCoords
+                        ? `${base}&marker=${encodeURIComponent(
+                            lat
+                          )},${encodeURIComponent(lon)}`
+                        : base;
+                    })(),
+                  }}
+                />
               ) : (
                 <MapView
                   provider={PROVIDER_DEFAULT}

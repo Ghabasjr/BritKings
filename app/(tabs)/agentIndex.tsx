@@ -27,7 +27,7 @@ const PropertyCard = ({ property }: { property: Property }) => (
                 </View>
             </View>
             <View style={leadStyles.priceRow}>
-                <Text style={leadStyles.price}>${property.price?.toLocaleString()}</Text>
+                <Text style={leadStyles.price}>₦{property.price?.toLocaleString()}</Text>
                 <Text style={leadStyles.available}>
                     {property.available ? 'Active' : 'Inactive'}
                 </Text>
@@ -37,11 +37,7 @@ const PropertyCard = ({ property }: { property: Property }) => (
                     <Ionicons name="location-sharp" size={16} color="#DD7800" />
                     <Text style={leadStyles.address} numberOfLines={2}>{property.address}</Text>
                 </View>
-                <Text style={leadStyles.details}>
-                    {property.bedrooms} Beds | {property.bathroom} Bath | {property.size?.toLocaleString()} sq ft
-                </Text>
-                {property.parking && <Text style={leadStyles.details}>Parking: {property.parking}</Text>}
-                {property.pools && <Text style={leadStyles.details}>Pools: {property.pools}</Text>}
+
             </View>
             {property.description && (
                 <View style={leadStyles.messageContainer}>

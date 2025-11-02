@@ -1,8 +1,11 @@
+import { fetchWithAuth } from "@/utils/authGuard";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -26,28 +29,46 @@ const RequestFinancingScreen = () => {
   const [annualIncome, setAnnualIncome] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-
-
   const handleSubmit = async () => {
     // Validation
     if (!fullName.trim()) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter your full name" });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter your full name",
+      });
       return;
     }
     if (!phone.trim()) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter your phone number" });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter your phone number",
+      });
       return;
     }
     if (!financingAmount.trim()) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter desired financing amount" });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter desired financing amount",
+      });
       return;
     }
     if (!employmentStatus.trim()) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter your employment status" });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter your employment status",
+      });
       return;
     }
     if (!annualIncome.trim()) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter your annual income" });
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter your annual income",
+      });
       return;
     }
 
@@ -60,11 +81,13 @@ const RequestFinancingScreen = () => {
       if (userDataString) {
         try {
           const userData = JSON.parse(userDataString);
-          customerId = userData.customerId || userData.userId || userData.id || "";
+          customerId =
+            userData.customerId || userData.userId || userData.id || "";
         } catch { }
       }
 
-      if (!customerId) throw new Error("Missing customer ID. Please log in again.");
+      if (!customerId)
+        throw new Error("Missing customer ID. Please log in again.");
 
       const body = {
         fullName,
@@ -77,48 +100,57 @@ const RequestFinancingScreen = () => {
       };
 
       console.log(" Sending body:", body);
-
-      // const res = await fetch(`${BASE_URL}${CLIENT_ENDPOINTS.REQUEST_FINANCIAL_INFO}`, {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(body),
-      // });
-
-      const formData = new FormData();
-      formData.append("dto", JSON.stringify(body));
-
-      const res = await fetch(`${BASE_URL}${CLIENT_ENDPOINTS.REQUEST_FINANCIAL_INFO}`, {
-        method: "POST",
-        body: formData,
-      });
-
+      const res = await fetchWithAuth(
+        `${BASE_URL}${CLIENT_ENDPOINTS.REQUEST_FINANCIAL_INFO}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
 
       let result: any = {};
+      console.log(" Status:", res.status);
+      const text = await res.text();
       try {
-        const text = await res.text();
         result = text ? JSON.parse(text) : {};
-      } catch {
+      } catch (e) {
+        // Non-JSON or empty body
         result = {};
       }
+      console.log("📦 Parsed result:", result);
 
       console.log(" Response:", result);
 
       if (!res.ok || result.responseCode !== "00") {
         const backendMessage =
-          result?.responseMessage?.error ||
-          (Array.isArray(result?.error) ? result.errors.join(", ") : "") ||
+          result?.responseMessage ||
+          (Array.isArray(result?.errors)
+            ? result.errors.join(", ")
+            : "Unknown error") ||
           "Failed to submit request. Please try again.";
-
         throw new Error(backendMessage);
       }
 
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: result.responseMessage || "Your financing request has been submitted.",
+        text2:
+          result.responseMessage ||
+          "Your financing request has been submitted.",
       });
 
-      setTimeout(() => router.back(), 1500);
+      // Navigate to Secure Checkout with amount and propertyId
+      const amountParam = financingAmount || String(body.budget);
+      setTimeout(() => {
+        router.push({
+          pathname: "/SecureCheckout",
+          params: {
+            amount: amountParam,
+            propertyId: propertyId,
+          },
+        });
+      }, 800);
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -130,15 +162,20 @@ const RequestFinancingScreen = () => {
     }
   };
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <Ionicons name="chevron-back" size={24} color="#DD7800" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Request Financing Info</Text>
@@ -181,7 +218,7 @@ const RequestFinancingScreen = () => {
             <Text style={styles.label}>Desired Financing Amount / Budget</Text>
             <TextInput
               style={styles.input}
-              placeholder="$300,000"
+              placeholder="₦300,000"
               placeholderTextColor="#BBB"
               value={financingAmount}
               onChangeText={setFinancingAmount}
@@ -206,7 +243,7 @@ const RequestFinancingScreen = () => {
             <Text style={styles.label}>Annual Income</Text>
             <TextInput
               style={styles.input}
-              placeholder="$400,000"
+              placeholder="₦400,000"
               placeholderTextColor="#BBB"
               value={annualIncome}
               onChangeText={setAnnualIncome}
@@ -219,7 +256,10 @@ const RequestFinancingScreen = () => {
       {/* Submit Button */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.proceedButton, isLoading && styles.proceedButtonDisabled]}
+          style={[
+            styles.proceedButton,
+            isLoading && styles.proceedButtonDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={isLoading}
         >
@@ -228,12 +268,13 @@ const RequestFinancingScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", paddingTop: 20 },
+  container: { flex: 1, backgroundColor: "#fff", paddingTop: 30 },
   header: {
     flexDirection: "row",
     alignItems: "center",

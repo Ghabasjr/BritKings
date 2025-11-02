@@ -1,7 +1,11 @@
+import { PAYSTACK_PUBLIC_KEY } from "@/constants/api";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -11,12 +15,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as PaystackModule from "react-native-paystack-webview";
+import { usePaystack } from "react-native-paystack-webview";
 import Toast from "react-native-toast-message";
-import { BASE_URL, PAYMENT_ENDPOINTS, PAYSTACK_PUBLIC_KEY } from "../constants/api";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-const Paystack: any =
-  (PaystackModule as any).default || (PaystackModule as any).Paystack;
+import paymentService from "../services/paymentService";
 
 const SecureCheckoutScreen = () => {
   const params = useLocalSearchParams();
@@ -31,7 +32,6 @@ const SecureCheckoutScreen = () => {
   const [cvv, setCvv] = useState("");
   const [saveForLater, setSaveForLater] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPaystack, setShowPaystack] = useState(false);
 
   // Parse amount like "20,000" -> kobo integer
   const amountInKobo = useMemo(() => {
@@ -44,6 +44,13 @@ const SecureCheckoutScreen = () => {
       return 0;
     }
   }, [amount]);
+
+  const paystackConfig = useMemo(() => ({
+    publicKey: PAYSTACK_PUBLIC_KEY,
+    amount: amountInKobo,
+  }), [amountInKobo]);
+
+  const { popup } = usePaystack(paystackConfig);
 
   const handlePayment = async () => {
     // Validation
@@ -107,35 +114,119 @@ const SecureCheckoutScreen = () => {
     setIsLoading(true);
     try {
       // Prepare payment initiation
-      let email = (params.email as string) || '';
-      let propertyId = (params.propertyId as string) || '';
+      const paramEmail = Array.isArray(params.email)
+        ? params.email[0]
+        : (params.email as string | undefined);
+      const paramPropertyId = Array.isArray(params.propertyId)
+        ? params.propertyId[0]
+        : (params.propertyId as string | undefined);
+      let email = paramEmail || "";
+      let propertyId = paramPropertyId || "";
       if (!email || !propertyId) {
-        const userDataString = await AsyncStorage.getItem('userData');
+        const userDataString = await AsyncStorage.getItem("userData");
         if (userDataString) {
           const userData = JSON.parse(userDataString);
-          if (!email) email = userData.email || userData.username || '';
+          if (!email) email = userData.email || userData.username || "";
         }
-        if (!propertyId && params.propertyId) propertyId = params.propertyId;
+        if (!propertyId && paramPropertyId) propertyId = paramPropertyId;
       }
-      if (!email) throw new Error('Missing email for payment.');
-      if (!propertyId) throw new Error('Missing property ID for payment.');
-      const body = { email, propertyId, amount: amountInKobo / 100 };
-      const res = await fetch(`${BASE_URL}${PAYMENT_ENDPOINTS.INITIATE_PAYMENT}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+      if (!email) throw new Error("Missing email for payment.");
+      if (!propertyId) throw new Error("Missing property ID for payment.");
+
+      const result = await paymentService.initiatePayment({
+        email,
+        propertyId,
+        amount: amountInKobo / 100,
       });
-      const result = await res.json();
-      if (!res.ok || result.responseCode !== '00') {
-        throw new Error(result?.responseMessage || result?.message || 'Could not initiate payment.');
+
+      console.log('Payment initiation result:', result);
+
+      if (result.responseCode !== "00") {
+        throw new Error(
+          result.responseMessage || "Could not initiate payment"
+        );
       }
-      // Optionally store result.responseData for use in Paystack
-      setShowPaystack(true);
+
+
+      const backendReference = result.responseData?.reference ||
+        result.responseData?.transactionReference ||
+        result.responseData?.transaction_reference;
+
+      console.log('Backend reference:', backendReference);
+      console.log('Full initiate payment response:', JSON.stringify(result, null, 2));
+
+      popup.checkout({
+        email,
+        amount: amountInKobo,
+        onSuccess: async (res: any) => {
+          console.log('Paystack Success Response:', JSON.stringify(res, null, 2));
+
+          try {
+            const paystackReference = res?.transactionRef?.reference ||
+              res?.reference ||
+              res?.data?.reference ||
+              res?.trxref;
+
+            console.log('Paystack reference:', paystackReference);
+            console.log('Backend reference:', backendReference);
+
+            if (!paystackReference) {
+              console.error('Full Paystack response:', res);
+              throw new Error("No transaction reference available from Paystack");
+            }
+
+            console.log('Verifying payment with Paystack reference:', paystackReference);
+            console.log('Including backend reference:', backendReference);
+
+            console.log('Verifying payment using backend reference:', backendReference);
+
+            const verificationResult = await paymentService.verifyPayment(
+              backendReference
+            );
+
+            console.log('Verification result:', verificationResult);
+
+            if (verificationResult.responseCode === "00") {
+              setIsLoading(false);
+              Toast.show({
+                type: "success",
+                text1: "Payment Verified",
+                text2: "Your payment has been confirmed"
+              });
+              setTimeout(() => {
+                router.push("/PaymentSuccess");
+              }, 200);
+            } else {
+              throw new Error(verificationResult.responseMessage || "Payment verification failed");
+            }
+          } catch (error: any) {
+            console.error('Payment verification error:', error);
+            setIsLoading(false);
+            Toast.show({
+              type: "error",
+              text1: "Verification Error",
+              text2: error.message || "Failed to verify payment",
+            });
+          }
+        },
+        onCancel: () => {
+          setIsLoading(false);
+          Toast.show({ type: "error", text1: "Payment cancelled" });
+        },
+        onError: (error: any) => {
+          setIsLoading(false);
+          Toast.show({
+            type: "error",
+            text1: "Payment Error",
+            text2: error.message || "Payment failed",
+          });
+        }
+      });
     } catch (error: any) {
       Toast.show({
-        type: 'error',
-        text1: 'Payment Error',
-        text2: error.message || 'Payment initiation failed',
+        type: "error",
+        text1: "Payment Error",
+        text2: error.message || "Payment initiation failed",
       });
       setIsLoading(false);
       return;
@@ -145,179 +236,162 @@ const SecureCheckoutScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#10B981" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Secure Checkout</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <View style={styles.content}>
-          {/* Payment Method Toggle */}
-          <View style={styles.paymentMethodContainer}>
-            <TouchableOpacity
-              style={[
-                styles.paymentMethodButton,
-                paymentMethod === "mastercard" && styles.paymentMethodActive,
-              ]}
-              onPress={() => setPaymentMethod("mastercard")}
-            >
-              <View style={styles.mastercardIcon}>
-                <View style={[styles.cardCircle, styles.cardCircleRed]} />
-                <View style={[styles.cardCircle, styles.cardCircleYellow]} />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.paymentMethodButton,
-                paymentMethod === "visa" && styles.paymentMethodActive,
-              ]}
-              onPress={() => setPaymentMethod("visa")}
-            >
-              <Text style={styles.visaText}>Visa</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Card Name */}
-          <View style={styles.inputGroup}>
-            <TextInput
-              style={styles.input}
-              placeholder="Card name"
-              placeholderTextColor="#BBB"
-              value={cardName}
-              onChangeText={setCardName}
-            />
-          </View>
-
-          {/* Card Number */}
-          <View style={styles.inputGroup}>
-            <View style={styles.cardNumberContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Card number"
-                placeholderTextColor="#BBB"
-                value={cardNumber}
-                onChangeText={setCardNumber}
-                keyboardType="number-pad"
-                maxLength={16}
-              />
-              <View style={styles.cardIconInInput}>
-                <View
-                  style={[
-                    styles.cardCircle,
-                    styles.cardCircleRed,
-                    styles.smallCircle,
-                  ]}
-                />
-                <View
-                  style={[
-                    styles.cardCircle,
-                    styles.cardCircleYellow,
-                    styles.smallCircle,
-                  ]}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Expiry Date and CVV */}
-          <View style={styles.rowInputs}>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <TextInput
-                style={styles.input}
-                placeholder="Expiry date"
-                placeholderTextColor="#BBB"
-                value={expiryDate}
-                onChangeText={setExpiryDate}
-                keyboardType="number-pad"
-                maxLength={5}
-              />
-            </View>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <TextInput
-                style={styles.input}
-                placeholder="CVV"
-                placeholderTextColor="#BBB"
-                value={cvv}
-                onChangeText={setCvv}
-                keyboardType="number-pad"
-                maxLength={3}
-                secureTextEntry
-              />
-            </View>
-          </View>
-
-          {/* Save for Later */}
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.saveForLaterContainer}
-            onPress={() => setSaveForLater(!saveForLater)}
+            style={styles.backButton}
+            onPress={() => router.back()}
           >
-            <View
-              style={[styles.checkbox, saveForLater && styles.checkboxActive]}
-            >
-              {saveForLater && (
-                <Ionicons name="checkmark" size={16} color="#fff" />
-              )}
-            </View>
-            <Text style={styles.saveForLaterText}>Save for later</Text>
+            <Ionicons name="chevron-back" size={24} color="#10B981" />
           </TouchableOpacity>
-
-          {/* Total Amount Box */}
-          <View style={styles.totalAmountBox}>
-            <Text style={styles.totalAmountLabel}>Total Amount</Text>
-            <Text style={styles.totalAmountValue}>{amount}</Text>
-          </View>
+          <Text style={styles.headerTitle}>Secure Checkout</Text>
+          <View style={styles.headerSpacer} />
         </View>
-      </ScrollView>
 
-      {/* Pay Now Button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.payNowButton,
-            isLoading && styles.payNowButtonDisabled,
-          ]}
-          onPress={handlePayment}
-          disabled={isLoading}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.payNowButtonText}>
-            {isLoading ? "Processing..." : "Pay Now"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      {showPaystack && (
-        <Paystack
-          paystackKey={PAYSTACK_PUBLIC_KEY}
-          amount={amountInKobo / 100}
-          billingEmail={(params.email as string) || "guest@britkings.com"}
-          activityIndicatorColor="#10B981"
-          onCancel={() => {
-            setShowPaystack(false);
-            setIsLoading(false);
-            Toast.show({ type: "error", text1: "Payment cancelled" });
-          }}
-          onSuccess={() => {
-            setShowPaystack(false);
-            setIsLoading(false);
-            Toast.show({ type: "success", text1: "Payment successful" });
-            setTimeout(() => {
-              router.push("/PaymentSuccess");
-            }, 200);
-          }}
-          autoStart
-        />
-      )}
+          <View style={styles.content}>
+            {/* Payment Method Toggle */}
+            <View style={styles.paymentMethodContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.paymentMethodButton,
+                  paymentMethod === "mastercard" && styles.paymentMethodActive,
+                ]}
+                onPress={() => setPaymentMethod("mastercard")}
+              >
+                <View style={styles.mastercardIcon}>
+                  <View style={[styles.cardCircle, styles.cardCircleRed]} />
+                  <View style={[styles.cardCircle, styles.cardCircleYellow]} />
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.paymentMethodButton,
+                  paymentMethod === "visa" && styles.paymentMethodActive,
+                ]}
+                onPress={() => setPaymentMethod("visa")}
+              >
+                <Text style={styles.visaText}>Visa</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Card Name */}
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Card name"
+                placeholderTextColor="#BBB"
+                value={cardName}
+                onChangeText={setCardName}
+              />
+            </View>
+
+            {/* Card Number */}
+            <View style={styles.inputGroup}>
+              <View style={styles.cardNumberContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Card number"
+                  placeholderTextColor="#BBB"
+                  value={cardNumber}
+                  onChangeText={setCardNumber}
+                  keyboardType="number-pad"
+                  maxLength={16}
+                />
+                <View style={styles.cardIconInInput}>
+                  <View
+                    style={[
+                      styles.cardCircle,
+                      styles.cardCircleRed,
+                      styles.smallCircle,
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.cardCircle,
+                      styles.cardCircleYellow,
+                      styles.smallCircle,
+                    ]}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Expiry Date and CVV */}
+            <View style={styles.rowInputs}>
+              <View style={[styles.inputGroup, styles.halfWidth]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Expiry date"
+                  placeholderTextColor="#BBB"
+                  value={expiryDate}
+                  onChangeText={setExpiryDate}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                />
+              </View>
+              <View style={[styles.inputGroup, styles.halfWidth]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="CVV"
+                  placeholderTextColor="#BBB"
+                  value={cvv}
+                  onChangeText={setCvv}
+                  keyboardType="number-pad"
+                  maxLength={3}
+                  secureTextEntry
+                />
+              </View>
+            </View>
+
+            {/* Save for Later */}
+            <TouchableOpacity
+              style={styles.saveForLaterContainer}
+              onPress={() => setSaveForLater(!saveForLater)}
+            >
+              <View
+                style={[styles.checkbox, saveForLater && styles.checkboxActive]}
+              >
+                {saveForLater && (
+                  <Ionicons name="checkmark" size={16} color="#fff" />
+                )}
+              </View>
+              <Text style={styles.saveForLaterText}>Save for later</Text>
+            </TouchableOpacity>
+
+            {/* Total Amount Box */}
+            <View style={styles.totalAmountBox}>
+              <Text style={styles.totalAmountLabel}>Total Amount</Text>
+              <Text style={styles.totalAmountValue}>{amount}</Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Pay Now Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.payNowButton,
+              isLoading && styles.payNowButtonDisabled,
+            ]}
+            onPress={handlePayment}
+            disabled={isLoading}
+          >
+            <Text style={styles.payNowButtonText}>
+              {isLoading ? "Processing..." : "Pay Now"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -326,7 +400,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 50,
+    paddingTop: 30,
   },
   header: {
     flexDirection: "row",
