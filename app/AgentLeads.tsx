@@ -1,10 +1,10 @@
-import { AGENT_AUTH_ENDPOINTS, BASE_URL } from '../constants/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { AGENT_AUTH_ENDPOINTS, BASE_URL } from '../constants/api';
 
 export default function AgentLeadsPage() {
   const [financialRequests, setFinancialRequests] = useState([]);
@@ -98,7 +98,7 @@ export default function AgentLeadsPage() {
               <View key={q.id || idx} style={styles.itemCard}>
                 <Text style={styles.itemTitle}>{q.fullName} ({q.email} | {q.phone})</Text>
                 <Text>Message: {q.message}</Text>
-                {q.agentDetails && (<Text>Agent: {q.agentDetails.staffName} ({q.agentDetails.department})</Text>)}
+                {q.agentDetails && (<Text>Partner: {q.agentDetails.staffName} ({q.agentDetails.department})</Text>)}
               </View>
             ))
           )}

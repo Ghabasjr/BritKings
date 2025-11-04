@@ -2,7 +2,7 @@ import { PAYSTACK_PUBLIC_KEY } from "@/constants/api";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,7 +21,19 @@ import paymentService from "../services/paymentService";
 
 const SecureCheckoutScreen = () => {
   const params = useLocalSearchParams();
-  const amount = (params.amount as string) || "20,000";
+  const rawAmount = (params.amount as string) || "10000";
+
+  console.log('[SecureCheckout] Render - rawAmount:', rawAmount);
+
+  const formattedAmount = useMemo(() => {
+    const clean = rawAmount.toString().replace(/,/g, "");
+    const num = Number(clean);
+    console.log('[SecureCheckout] Formatting - clean:', clean, 'num:', num);
+    if (Number.isNaN(num) || num <= 0) return "₦0";
+    const formatted = `₦${num.toLocaleString()}`;
+    console.log('[SecureCheckout] Formatted amount:', formatted);
+    return formatted;
+  }, [rawAmount]);
 
   const [paymentMethod, setPaymentMethod] = useState<"mastercard" | "visa">(
     "mastercard"
@@ -33,24 +45,27 @@ const SecureCheckoutScreen = () => {
   const [saveForLater, setSaveForLater] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Parse amount like "20,000" -> kobo integer
   const amountInKobo = useMemo(() => {
     try {
-      const clean = (amount || "0").toString().replace(/,/g, "");
+      const clean = rawAmount.toString().replace(/,/g, "");
       const naira = Number(clean);
       if (Number.isNaN(naira) || naira <= 0) return 0;
       return Math.round(naira * 100);
     } catch {
       return 0;
     }
-  }, [amount]);
+  }, [rawAmount]);
 
-  const paystackConfig = useMemo(() => ({
-    publicKey: PAYSTACK_PUBLIC_KEY,
-    amount: amountInKobo,
-  }), [amountInKobo]);
+  const { popup } = usePaystack();
 
-  const { popup } = usePaystack(paystackConfig);
+  // Add logging to debug the amount issue
+  useEffect(() => {
+    console.log('SecureCheckout - rawAmount:', rawAmount);
+    console.log('SecureCheckout - formattedAmount:', formattedAmount);
+    console.log('SecureCheckout - amountInKobo:', amountInKobo);
+    console.log('SecureCheckout - popup object:', popup);
+    console.log('SecureCheckout - popup.checkout exists:', typeof popup?.checkout);
+  }, [rawAmount, formattedAmount, amountInKobo, popup]);
 
   const handlePayment = async () => {
     // Validation
@@ -113,7 +128,6 @@ const SecureCheckoutScreen = () => {
 
     setIsLoading(true);
     try {
-      // Prepare payment initiation
       const paramEmail = Array.isArray(params.email)
         ? params.email[0]
         : (params.email as string | undefined);
@@ -155,11 +169,27 @@ const SecureCheckoutScreen = () => {
       console.log('Backend reference:', backendReference);
       console.log('Full initiate payment response:', JSON.stringify(result, null, 2));
 
+      // Paystack expects amount in Naira (not kobo)
+      const amountInNaira = amountInKobo / 100;
+
+      console.log('=== PAYMENT INITIATION ===');
+      console.log('Email:', email);
+      console.log('Amount in Naira:', amountInNaira);
+      console.log('Amount in Kobo:', amountInKobo);
+      console.log('Backend Reference:', backendReference);
+      console.log('Popup object exists:', !!popup);
+      console.log('Popup.checkout exists:', typeof popup?.checkout);
+
+      if (!popup || typeof popup.checkout !== 'function') {
+        throw new Error('Paystack popup not initialized properly');
+      }
+
       popup.checkout({
         email,
-        amount: amountInKobo,
+        amount: amountInNaira,
+        reference: backendReference,
         onSuccess: async (res: any) => {
-          console.log('Paystack Success Response:', JSON.stringify(res, null, 2));
+          console.log('✅ Paystack Success Response:', JSON.stringify(res, null, 2));
 
           try {
             const paystackReference = res?.transactionRef?.reference ||
@@ -210,18 +240,25 @@ const SecureCheckoutScreen = () => {
           }
         },
         onCancel: () => {
+          console.log('❌ Payment cancelled by user');
           setIsLoading(false);
           Toast.show({ type: "error", text1: "Payment cancelled" });
         },
         onError: (error: any) => {
+          console.error('❌ Paystack Error:', error);
           setIsLoading(false);
           Toast.show({
             type: "error",
             text1: "Payment Error",
             text2: error.message || "Payment failed",
           });
+        },
+        onLoad: () => {
+          console.log('📱 Paystack WebView loaded');
         }
       });
+
+      console.log('✅ Paystack checkout method called successfully');
     } catch (error: any) {
       Toast.show({
         type: "error",
@@ -371,7 +408,7 @@ const SecureCheckoutScreen = () => {
             {/* Total Amount Box */}
             <View style={styles.totalAmountBox}>
               <Text style={styles.totalAmountLabel}>Total Amount</Text>
-              <Text style={styles.totalAmountValue}>{amount}</Text>
+              <Text style={styles.totalAmountValue}>{formattedAmount}</Text>
             </View>
           </View>
         </ScrollView>

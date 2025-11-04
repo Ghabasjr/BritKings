@@ -147,131 +147,131 @@ export default function ContactAgentScreen() {
                 >
                     {/* Header */}
                     <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginBottom: 32,
-                    }}
-                >
-                    <TouchableOpacity onPress={() => router.back()}>
-
-                        <Ionicons name="chevron-back" size={24} color="#DD7800" />
-                    </TouchableOpacity>
-                    <Text
                         style={{
-                            marginLeft: 8,
-                            fontSize: 20,
-                            fontWeight: '600',
-                            color: '#000',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginBottom: 32,
                         }}
                     >
-                        Contact Agent
-                    </Text>
-                </View>
+                        <TouchableOpacity onPress={() => router.back()}>
 
-
-                {/* Name Input */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Please enter your name"
-                        placeholderTextColor="#999"
-                        value={name}
-                        onChangeText={setName}
-                    />
-                </View>
-
-                {/* Phone Input */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Phone</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="enter your contact"
-                        placeholderTextColor="#999"
-                        value={phone}
-                        onChangeText={setPhone}
-                        keyboardType="phone-pad"
-                    />
-                </View>
-
-                {/* Email Input */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Email address</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="as@gmail.com"
-                        placeholderTextColor="#999"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                    />
-                </View>
-
-                {/* Message Input */}
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Message</Text>
-                    <TextInput
-                        style={[styles.input, styles.messageInput]}
-                        placeholder="Enter your message"
-                        placeholderTextColor="#999"
-                        value={message}
-                        onChangeText={setMessage}
-                        multiline
-                        numberOfLines={4}
-                        textAlignVertical="top"
-                    />
-                </View>
-
-                {/* Checkboxes */}
-                <TouchableOpacity
-                    style={styles.checkboxRow}
-                    onPress={() => setScheduleVisit(!scheduleVisit)}
-                >
-                    <View style={styles.checkbox}>
-                        {scheduleVisit && <View style={styles.checkboxChecked} />}
+                            <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                        </TouchableOpacity>
+                        <Text
+                            style={{
+                                marginLeft: 8,
+                                fontSize: 20,
+                                fontWeight: '600',
+                                color: '#000',
+                            }}
+                        >
+                            Contact Agent
+                        </Text>
                     </View>
-                    <Text style={styles.checkboxLabel}>Schedule a visit</Text>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.checkboxRow}
-                    onPress={() => setAskQuestion(!askQuestion)}
-                >
-                    <View style={styles.checkbox}>
-                        {askQuestion && <View style={styles.checkboxChecked} />}
+
+                    {/* Name Input */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Name</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Please enter your name"
+                            placeholderTextColor="#999"
+                            value={name}
+                            onChangeText={setName}
+                        />
                     </View>
-                    <Text style={styles.checkboxLabel}>Ask question</Text>
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.checkboxRow}
-                    onPress={() => setRequestFinancing(!requestFinancing)}
-                >
-                    <View style={styles.checkbox}>
-                        {requestFinancing && <View style={styles.checkboxChecked} />}
+                    {/* Phone Input */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Phone</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="enter your contact"
+                            placeholderTextColor="#999"
+                            value={phone}
+                            onChangeText={setPhone}
+                            keyboardType="phone-pad"
+                        />
                     </View>
-                    <Text style={styles.checkboxLabel}>Request Financing Info</Text>
-                </TouchableOpacity>
 
-                {/* Contact Agent Button */}
-                <TouchableOpacity
-                    style={[styles.contactButton, isLoading && styles.contactButtonDisabled]}
-                    onPress={handleContactAgent}
-                    disabled={isLoading}
-                >
-                    {isLoading ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                        <Text style={styles.contactButtonText}>Contact Agent</Text>
-                    )}
-                </TouchableOpacity>
+                    {/* Email Input */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Email address</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="as@gmail.com"
+                            placeholderTextColor="#999"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
 
-                {/* Cancel Button */}
-                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
+                    {/* Message Input */}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Message</Text>
+                        <TextInput
+                            style={[styles.input, styles.messageInput]}
+                            placeholder="Enter your message"
+                            placeholderTextColor="#999"
+                            value={message}
+                            onChangeText={setMessage}
+                            multiline
+                            numberOfLines={4}
+                            textAlignVertical="top"
+                        />
+                    </View>
+
+                    {/* Checkboxes */}
+                    <TouchableOpacity
+                        style={styles.checkboxRow}
+                        onPress={() => setScheduleVisit(!scheduleVisit)}
+                    >
+                        <View style={styles.checkbox}>
+                            {scheduleVisit && <View style={styles.checkboxChecked} />}
+                        </View>
+                        <Text style={styles.checkboxLabel}>Schedule a visit</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.checkboxRow}
+                        onPress={() => setAskQuestion(!askQuestion)}
+                    >
+                        <View style={styles.checkbox}>
+                            {askQuestion && <View style={styles.checkboxChecked} />}
+                        </View>
+                        <Text style={styles.checkboxLabel}>Ask question</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.checkboxRow}
+                        onPress={() => setRequestFinancing(!requestFinancing)}
+                    >
+                        <View style={styles.checkbox}>
+                            {requestFinancing && <View style={styles.checkboxChecked} />}
+                        </View>
+                        <Text style={styles.checkboxLabel}>Request Financing Info</Text>
+                    </TouchableOpacity>
+
+                    {/* Contact Agent Button */}
+                    <TouchableOpacity
+                        style={[styles.contactButton, isLoading && styles.contactButtonDisabled]}
+                        onPress={handleContactAgent}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.contactButtonText}>Contact partner</Text>
+                        )}
+                    </TouchableOpacity>
+
+                    {/* Cancel Button */}
+                    <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
 
                     <View style={{ height: 40 }} />
                 </ScrollView>

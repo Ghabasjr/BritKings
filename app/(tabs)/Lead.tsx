@@ -1,11 +1,11 @@
 import { AGENT_AUTH_ENDPOINTS, BASE_URL } from '@/constants/api';
+import { CustomerQuestion, FinancialRequest } from '@/types/lead';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { CustomerQuestion, FinancialRequest } from '@/types/lead';
 
 interface Property {
     propertyId: string;
@@ -138,7 +138,7 @@ const CustomerQuestionCard = ({ question }: CustomerQuestionCardProps) => {
 
             {question.agentDetails && (
                 <View style={styles.agentInfo}>
-                    <Text style={styles.agentLabel}>Assigned Agent:</Text>
+                    <Text style={styles.agentLabel}>Assigned Partner:</Text>
                     <Text style={styles.agentName}>{question.agentDetails.staffName}</Text>
                     <Text style={styles.agentContact}>{question.agentDetails.email}</Text>
                 </View>
@@ -322,8 +322,8 @@ export default function LeadPage() {
             }
 
             const totalLeads = (propertiesResult.responseData?.length || 0) +
-                             (questionsResult.responseData?.length || 0) +
-                             (financialResult.responseData?.length || 0);
+                (questionsResult.responseData?.length || 0) +
+                (financialResult.responseData?.length || 0);
 
             if (isRefresh && totalLeads > 0) {
                 Toast.show({

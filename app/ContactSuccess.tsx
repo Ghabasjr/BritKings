@@ -25,7 +25,7 @@ export default function ContactSuccessScreen() {
 
                 {/* Success Message */}
                 <Text style={styles.message}>
-                    Your message has been sent to an agent. They'll reach out shortly to discuss your inquiry. You will get a comfirmation email soon
+                    Your message has been sent to a partner. They'll reach out shortly to discuss your inquiry. You will get a comfirmation email soon
                 </Text>
 
                 {/* View More Homes Button */}
