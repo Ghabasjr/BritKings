@@ -12,7 +12,6 @@ interface Message {
     time?: string;
 }
 
-// Sample Chat Data
 const initialMessages: Message[] = [
     {
         id: '1',

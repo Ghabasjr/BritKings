@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '@/utils/authGuard';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -16,7 +17,6 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { BASE_URL, CLIENT_ENDPOINTS } from '../constants/api';
-import { fetchWithAuth } from '@/utils/authGuard';
 
 const ScheduleVisitScreen = () => {
     const params = useLocalSearchParams();
@@ -109,14 +109,7 @@ const ScheduleVisitScreen = () => {
         try {
             let agentId = params.agentId as string || '';
             if (!agentId) {
-                // Try to get agentId from AsyncStorage if required, can be left blank if strictly optional
-                /* const userDataString = await AsyncStorage.getItem('userData');
-                if (userDataString) {
-                    try {
-                        const userData = JSON.parse(userDataString);
-                        agentId = userData.agentId || userData.userId || userData.id || '';
-                    } catch {}
-                } */
+
             }
 
             const [month, day, year] = preferredDate.split('/');
@@ -181,131 +174,131 @@ const ScheduleVisitScreen = () => {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
             >
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="chevron-back" size={24} color="#DD7800" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Schedule a Visit</Text>
-                <View style={styles.headerSpacer} />
-            </View>
-
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={styles.content}>
-                    {/* Full Name */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Full name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Please enter your name"
-                            placeholderTextColor="#BBB"
-                            value={fullName}
-                            onChangeText={setFullName}
-                        />
-                    </View>
-
-                    {/* Email */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Email</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter your email"
-                            placeholderTextColor="#BBB"
-                            value={email}
-                            onChangeText={setEmail}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                        />
-                    </View>
-
-                    {/* Phone */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Phone</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Enter your contact"
-                            placeholderTextColor="#BBB"
-                            value={phone}
-                            onChangeText={setPhone}
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-
-                    {/* Preferred Date */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Preferred Date</Text>
-                        <TouchableOpacity
-                            style={styles.input}
-                            onPress={() => setShowDatePicker(true)}
-                        >
-                            <Text style={{ color: preferredDate ? '#333' : '#BBB' }}>
-                                {preferredDate || 'Select Date'}
-                            </Text>
-                        </TouchableOpacity>
-                        {showDatePicker && (
-                            <DateTimePicker
-                                value={date}
-                                mode="date"
-                                display="default"
-                                onChange={onDateChange}
-                                minimumDate={new Date()}
-                            />
-                        )}
-                    </View>
-
-                    {/* Preferred Time */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Preferred Time</Text>
-                        <TouchableOpacity
-                            style={styles.input}
-                            onPress={() => setShowTimePicker(true)}
-                        >
-                            <Text style={{ color: preferredTime ? '#333' : '#BBB' }}>
-                                {preferredTime || 'Select Time'}
-                            </Text>
-                        </TouchableOpacity>
-                        {showTimePicker && (
-                            <DateTimePicker
-                                value={date}
-                                mode="time"
-                                display="default"
-                                onChange={onTimeChange}
-                            />
-                        )}
-                    </View>
-                    {/* Additional Notes */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Additional Notes (Optional)</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            placeholder="Any special requests or questions..."
-                            placeholderTextColor="#BBB"
-                            value={additionalNotes}
-                            onChangeText={setAdditionalNotes}
-                            multiline
-                            numberOfLines={4}
-                            textAlignVertical="top"
-                        />
-                    </View>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="chevron-back" size={24} color="#DD7800" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Schedule a Visit</Text>
+                    <View style={styles.headerSpacer} />
                 </View>
-            </ScrollView>
 
-            {/* Submit Button */}
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                    style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
-                    onPress={handleSubmit}
-                    disabled={isLoading}
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
                 >
-                    <Text style={styles.submitButtonText}>
-                        {isLoading ? 'Scheduling...' : 'Schedule Visit'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
+                    <View style={styles.content}>
+                        {/* Full Name */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Full name</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Please enter your name"
+                                placeholderTextColor="#BBB"
+                                value={fullName}
+                                onChangeText={setFullName}
+                            />
+                        </View>
+
+                        {/* Email */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Email</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Enter your email"
+                                placeholderTextColor="#BBB"
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                            />
+                        </View>
+
+                        {/* Phone */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Phone</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Enter your contact"
+                                placeholderTextColor="#BBB"
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
+                            />
+                        </View>
+
+                        {/* Preferred Date */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Preferred Date</Text>
+                            <TouchableOpacity
+                                style={styles.input}
+                                onPress={() => setShowDatePicker(true)}
+                            >
+                                <Text style={{ color: preferredDate ? '#333' : '#BBB' }}>
+                                    {preferredDate || 'Select Date'}
+                                </Text>
+                            </TouchableOpacity>
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={date}
+                                    mode="date"
+                                    display="default"
+                                    onChange={onDateChange}
+                                    minimumDate={new Date()}
+                                />
+                            )}
+                        </View>
+
+                        {/* Preferred Time */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Preferred Time</Text>
+                            <TouchableOpacity
+                                style={styles.input}
+                                onPress={() => setShowTimePicker(true)}
+                            >
+                                <Text style={{ color: preferredTime ? '#333' : '#BBB' }}>
+                                    {preferredTime || 'Select Time'}
+                                </Text>
+                            </TouchableOpacity>
+                            {showTimePicker && (
+                                <DateTimePicker
+                                    value={date}
+                                    mode="time"
+                                    display="default"
+                                    onChange={onTimeChange}
+                                />
+                            )}
+                        </View>
+                        {/* Additional Notes */}
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Additional Notes (Optional)</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                placeholder="Any special requests or questions..."
+                                placeholderTextColor="#BBB"
+                                value={additionalNotes}
+                                onChangeText={setAdditionalNotes}
+                                multiline
+                                numberOfLines={4}
+                                textAlignVertical="top"
+                            />
+                        </View>
+                    </View>
+                </ScrollView>
+
+                {/* Submit Button */}
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+                        onPress={handleSubmit}
+                        disabled={isLoading}
+                    >
+                        <Text style={styles.submitButtonText}>
+                            {isLoading ? 'Scheduling...' : 'Schedule Visit'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );

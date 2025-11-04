@@ -61,7 +61,7 @@ const PropertyCard = ({ property, onContactAgent }: { property: Property, onCont
                 </TouchableOpacity>
 
                 <GradientButton
-                    title='Contact Agent'
+                    title='Contact Partner'
                     onPress={() => onContactAgent(property)}
                 />
             </View>
@@ -173,19 +173,16 @@ export default function RealEstateHomePage() {
     const [showContactModal, setShowContactModal] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-    // Form states for sell modal
     const [propertyName, setPropertyName] = useState('');
     const [propertyPrice, setPropertyPrice] = useState('');
     const [propertyLocation, setPropertyLocation] = useState('');
     const [propertySize, setPropertySize] = useState('');
 
-    // Handle contact agent
     const handleContactAgent = (property: Property) => {
         setSelectedProperty(property);
         setShowContactModal(true);
     };
 
-    // Fetch properties on mount
     useEffect(() => {
         fetchProperties();
     }, []);
@@ -452,7 +449,7 @@ export default function RealEstateHomePage() {
                     <View style={contactModalStyles.bottomSheet}>
                         <View style={contactModalStyles.handle} />
 
-                        <Text style={contactModalStyles.title}>Contact Agent</Text>
+                        <Text style={contactModalStyles.title}>Contact Partners</Text>
 
                         <TouchableOpacity
                             style={contactModalStyles.actionButton}
@@ -513,7 +510,7 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 20
+        paddingTop: 30
     },
     scrollView: {
         flex: 1,

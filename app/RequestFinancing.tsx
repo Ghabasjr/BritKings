@@ -24,7 +24,7 @@ const RequestFinancingScreen = () => {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [financingAmount, setFinancingAmount] = useState("");
+  const [financingAmount] = useState("10000");
   const [employmentStatus, setEmploymentStatus] = useState("");
   const [annualIncome, setAnnualIncome] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -47,14 +47,8 @@ const RequestFinancingScreen = () => {
       });
       return;
     }
-    if (!financingAmount.trim()) {
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Please enter desired financing amount",
-      });
-      return;
-    }
+    // Financing amount is now fixed at 10,000 naira (service fee)
+    // Validation removed as it's set by default
     if (!employmentStatus.trim()) {
       Toast.show({
         type: "error",
@@ -118,7 +112,7 @@ const RequestFinancingScreen = () => {
         // Non-JSON or empty body
         result = {};
       }
-      console.log("📦 Parsed result:", result);
+      console.log(" Parsed result:", result);
 
       console.log(" Response:", result);
 
@@ -140,7 +134,6 @@ const RequestFinancingScreen = () => {
           "Your financing request has been submitted.",
       });
 
-      // Navigate to Secure Checkout with amount and propertyId
       const amountParam = financingAmount || String(body.budget);
       setTimeout(() => {
         router.push({
@@ -170,104 +163,107 @@ const RequestFinancingScreen = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#DD7800" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Request Financing Info</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.content}>
-          {/* Full Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Please enter your name"
-              placeholderTextColor="#BBB"
-              value={fullName}
-              onChangeText={setFullName}
-            />
-          </View>
-
-          {/* Phone */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your contact"
-              placeholderTextColor="#BBB"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          {/* Financing Amount */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Desired Financing Amount / Budget</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="₦300,000"
-              placeholderTextColor="#BBB"
-              value={financingAmount}
-              onChangeText={setFinancingAmount}
-              keyboardType="numeric"
-            />
-          </View>
-
-          {/* Employment Status */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Employment Status</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Civil servant"
-              placeholderTextColor="#BBB"
-              value={employmentStatus}
-              onChangeText={setEmploymentStatus}
-            />
-          </View>
-
-          {/* Annual Income */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Annual Income</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="₦400,000"
-              placeholderTextColor="#BBB"
-              value={annualIncome}
-              onChangeText={setAnnualIncome}
-              keyboardType="numeric"
-            />
-          </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#DD7800" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Request Financing Info</Text>
+          <View style={styles.headerSpacer} />
         </View>
-      </ScrollView>
 
-      {/* Submit Button */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.proceedButton,
-            isLoading && styles.proceedButtonDisabled,
-          ]}
-          onPress={handleSubmit}
-          disabled={isLoading}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.proceedButtonText}>
-            {isLoading ? "Processing..." : "Proceed"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.content}>
+            {/* Full Name */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Please enter your name"
+                placeholderTextColor="#BBB"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+            </View>
+
+            {/* Phone */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your contact"
+                placeholderTextColor="#BBB"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            {/* Service Fee Notice */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Service Fee</Text>
+              <View style={styles.serviceFeeContainer}>
+                <View style={styles.serviceFeeContent}>
+                  <Ionicons name="information-circle" size={24} color="#DD7800" />
+                  <View style={styles.serviceFeeTextContainer}>
+                    <Text style={styles.serviceFeeAmount}>₦10,000</Text>
+                    <Text style={styles.serviceFeeDescription}>
+                      One-time service fee for processing your financing request
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            {/* Employment Status */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Employment Status</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Civil servant"
+                placeholderTextColor="#BBB"
+                value={employmentStatus}
+                onChangeText={setEmploymentStatus}
+              />
+            </View>
+
+            {/* Annual Income */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Annual Income</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="₦400,000"
+                placeholderTextColor="#BBB"
+                value={annualIncome}
+                onChangeText={setAnnualIncome}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Submit Button */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.proceedButton,
+              isLoading && styles.proceedButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            <Text style={styles.proceedButtonText}>
+              {isLoading ? "Processing..." : "Proceed"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -320,6 +316,32 @@ const styles = StyleSheet.create({
   },
   proceedButtonDisabled: { opacity: 0.6 },
   proceedButtonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  serviceFeeContainer: {
+    backgroundColor: "#FFF5E6",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#FFE4B8",
+  },
+  serviceFeeContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  serviceFeeTextContainer: {
+    flex: 1,
+  },
+  serviceFeeAmount: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#DD7800",
+    marginBottom: 4,
+  },
+  serviceFeeDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+  },
 });
 
 export default RequestFinancingScreen;

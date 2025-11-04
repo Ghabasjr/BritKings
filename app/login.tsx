@@ -62,7 +62,6 @@ export default function LoginPage() {
                 text2: 'Welcome back!',
             });
 
-            // Navigate to the correct dashboard based on role
             if (loginType === 'Agent') {
                 // console.log("user data stored:", userData)
                 router.replace('/(tabs)/agentIndex');
@@ -113,7 +112,7 @@ export default function LoginPage() {
                                     styles.toggleText,
                                     loginType === 'Agent' && styles.toggleTextActive
                                 ]}>
-                                    Agent
+                                    Partner
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -134,7 +133,7 @@ export default function LoginPage() {
 
                         {/* Form Title */}
                         <Text style={styles.formTitle}>
-                            {loginType === 'Agent' ? 'Agent Login' : 'Buyer Login'}
+                            {loginType === 'Agent' ? 'Partner Login' : 'Buyer Login'}
                         </Text>
 
                         {/* Form Section */}

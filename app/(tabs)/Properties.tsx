@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const ClientPropertyCard = ({ property }: any) => (
@@ -50,7 +50,7 @@ const ClientPropertyCard = ({ property }: any) => (
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={propertyStyles.proceedButton}
-                    onPress={() => router.push('/RequestFinancing')}
+                    onPress={() => router.push('/SecureCheckout')}
                 >
                     <Text style={propertyStyles.proceedText}>Proceed To Pay</Text>
                 </TouchableOpacity>
@@ -263,6 +263,17 @@ interface Property {
     createdAt: string;
     updatedAt: string;
     deleted: boolean;
+    buyer?: BuyerInfo;
+}
+
+interface BuyerInfo {
+    buyerId?: string;
+    name?: string;
+    email?: string;
+    phoneNumber?: string;
+    address?: string;
+    purchaseDate?: string;
+    paymentStatus?: string;
 }
 
 export default function PropertiesPage() {
@@ -272,6 +283,10 @@ export default function PropertiesPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
     const [userRole, setUserRole] = useState<'Agent' | 'Client' | null>(null);
+    const [showBuyerModal, setShowBuyerModal] = useState(false);
+    const [selectedBuyer, setSelectedBuyer] = useState<BuyerInfo | null>(null);
+    const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+    const [loadingBuyer, setLoadingBuyer] = useState(false);
 
     // Load user role on mount
     useEffect(() => {
@@ -415,13 +430,69 @@ export default function PropertiesPage() {
         }
     };
 
-    const handleViewBuyer = (property: Property) => {
-        Toast.show({
-            type: 'info',
-            text1: 'View Buyer',
-            text2: `Opening buyer information for ${property.name}`,
-        });
-        // TODO: Navigate to buyer details page
+    const handleViewBuyer = async (property: Property) => {
+        setSelectedProperty(property);
+        setShowBuyerModal(true);
+        setLoadingBuyer(true);
+
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            const userDataString = await AsyncStorage.getItem('userData');
+
+            if (!token) {
+                throw new Error('Authentication token not found');
+            }
+
+            let agentId = '';
+            if (userDataString) {
+                try {
+                    const userData = JSON.parse(userDataString);
+                    agentId = userData.agentId || userData.userId || userData.id || '';
+                } catch (e) {
+                    console.error('Failed to parse user data:', e);
+                }
+            }
+
+            // Fetch buyer information for this property
+            const endpoint = `${BASE_URL}${AGENT_AUTH_ENDPOINTS.SOLD_PROPERTY.replace('{agentId}', agentId)}`;
+            const response = await fetch(endpoint, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.responseCode === '00') {
+                const soldProperties = result.responseData || [];
+                const soldProperty = soldProperties.find((p: any) => p.propertyId === property.propertyId);
+
+                if (soldProperty && soldProperty.buyer) {
+                    setSelectedBuyer(soldProperty.buyer);
+                } else {
+                    // If no buyer info found in the response, show generic info
+                    setSelectedBuyer({
+                        name: 'Information Not Available',
+                        email: 'N/A',
+                        phoneNumber: 'N/A',
+                    });
+                }
+            } else {
+                throw new Error('Failed to fetch buyer information');
+            }
+        } catch (error: any) {
+            console.error('Fetch buyer error:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.message || 'Failed to load buyer information',
+            });
+            setSelectedBuyer(null);
+        } finally {
+            setLoadingBuyer(false);
+        }
     };
 
     // Get tabs based on user role
@@ -537,6 +608,134 @@ export default function PropertiesPage() {
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Buyer Details Modal */}
+            <Modal
+                visible={showBuyerModal}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowBuyerModal(false)}
+            >
+                <View style={modalStyles.modalOverlay}>
+                    <View style={modalStyles.modalContent}>
+                        {/* Modal Header */}
+                        <View style={modalStyles.modalHeader}>
+                            <Text style={modalStyles.modalTitle}>Buyer Information</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowBuyerModal(false)}
+                                style={modalStyles.closeButton}
+                            >
+                                <Ionicons name="close" size={28} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Property Info */}
+                        {selectedProperty && (
+                            <View style={modalStyles.propertyInfoSection}>
+                                <Text style={modalStyles.sectionTitle}>Property</Text>
+                                <Text style={modalStyles.propertyName}>{selectedProperty.name}</Text>
+                                <Text style={modalStyles.propertyAddress}>{selectedProperty.address}</Text>
+                            </View>
+                        )}
+
+                        {/* Buyer Details */}
+                        {loadingBuyer ? (
+                            <View style={modalStyles.loadingSection}>
+                                <ActivityIndicator size="large" color="#DD7800" />
+                                <Text style={modalStyles.loadingText}>Loading buyer information...</Text>
+                            </View>
+                        ) : selectedBuyer ? (
+                            <ScrollView style={modalStyles.buyerDetailsSection} showsVerticalScrollIndicator={false}>
+                                <View style={modalStyles.detailRow}>
+                                    <View style={modalStyles.iconContainer}>
+                                        <Ionicons name="person" size={20} color="#DD7800" />
+                                    </View>
+                                    <View style={modalStyles.detailContent}>
+                                        <Text style={modalStyles.detailLabel}>Name</Text>
+                                        <Text style={modalStyles.detailValue}>{selectedBuyer.name || 'N/A'}</Text>
+                                    </View>
+                                </View>
+
+                                <View style={modalStyles.detailRow}>
+                                    <View style={modalStyles.iconContainer}>
+                                        <Ionicons name="mail" size={20} color="#DD7800" />
+                                    </View>
+                                    <View style={modalStyles.detailContent}>
+                                        <Text style={modalStyles.detailLabel}>Email</Text>
+                                        <Text style={modalStyles.detailValue}>{selectedBuyer.email || 'N/A'}</Text>
+                                    </View>
+                                </View>
+
+                                <View style={modalStyles.detailRow}>
+                                    <View style={modalStyles.iconContainer}>
+                                        <Ionicons name="call" size={20} color="#DD7800" />
+                                    </View>
+                                    <View style={modalStyles.detailContent}>
+                                        <Text style={modalStyles.detailLabel}>Phone Number</Text>
+                                        <Text style={modalStyles.detailValue}>{selectedBuyer.phoneNumber || 'N/A'}</Text>
+                                    </View>
+                                </View>
+
+                                {selectedBuyer.address && (
+                                    <View style={modalStyles.detailRow}>
+                                        <View style={modalStyles.iconContainer}>
+                                            <Ionicons name="location" size={20} color="#DD7800" />
+                                        </View>
+                                        <View style={modalStyles.detailContent}>
+                                            <Text style={modalStyles.detailLabel}>Address</Text>
+                                            <Text style={modalStyles.detailValue}>{selectedBuyer.address}</Text>
+                                        </View>
+                                    </View>
+                                )}
+
+                                {selectedBuyer.purchaseDate && (
+                                    <View style={modalStyles.detailRow}>
+                                        <View style={modalStyles.iconContainer}>
+                                            <Ionicons name="calendar" size={20} color="#DD7800" />
+                                        </View>
+                                        <View style={modalStyles.detailContent}>
+                                            <Text style={modalStyles.detailLabel}>Purchase Date</Text>
+                                            <Text style={modalStyles.detailValue}>
+                                                {new Date(selectedBuyer.purchaseDate).toLocaleDateString()}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+
+                                {selectedBuyer.paymentStatus && (
+                                    <View style={modalStyles.detailRow}>
+                                        <View style={modalStyles.iconContainer}>
+                                            <Ionicons name="card" size={20} color="#DD7800" />
+                                        </View>
+                                        <View style={modalStyles.detailContent}>
+                                            <Text style={modalStyles.detailLabel}>Payment Status</Text>
+                                            <Text style={[
+                                                modalStyles.detailValue,
+                                                selectedBuyer.paymentStatus === 'COMPLETED' && modalStyles.statusCompleted
+                                            ]}>
+                                                {selectedBuyer.paymentStatus}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+                            </ScrollView>
+                        ) : (
+                            <View style={modalStyles.emptySection}>
+                                <Ionicons name="alert-circle-outline" size={64} color="#ccc" />
+                                <Text style={modalStyles.emptyText}>No buyer information available</Text>
+                            </View>
+                        )}
+
+                        {/* Action Buttons */}
+                        {selectedBuyer && selectedBuyer.phoneNumber && selectedBuyer.phoneNumber !== 'N/A' && (
+                            <TouchableOpacity style={modalStyles.contactButton}>
+                                <Ionicons name="call" size={20} color="#fff" />
+                                <Text style={modalStyles.contactButtonText}>Contact Buyer</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -654,5 +853,149 @@ const styles = StyleSheet.create({
         color: '#666',
         textAlign: 'center',
         paddingHorizontal: 40,
+    },
+});
+
+const modalStyles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        paddingTop: 20,
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+        maxHeight: '85%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1a1a1a',
+    },
+    closeButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    propertyInfoSection: {
+        backgroundColor: '#FFF8F0',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+    },
+    sectionTitle: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#DD7800',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 8,
+    },
+    propertyName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1a1a1a',
+        marginBottom: 4,
+    },
+    propertyAddress: {
+        fontSize: 14,
+        color: '#666',
+    },
+    loadingSection: {
+        paddingVertical: 60,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#666',
+    },
+    buyerDetailsSection: {
+        flex: 1,
+        marginBottom: 20,
+    },
+    detailRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        backgroundColor: '#F9F9F9',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 12,
+    },
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FFF8F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    detailContent: {
+        flex: 1,
+    },
+    detailLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#888',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 4,
+    },
+    detailValue: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#1a1a1a',
+    },
+    statusCompleted: {
+        color: '#10B981',
+        fontWeight: '600',
+    },
+    emptySection: {
+        paddingVertical: 60,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyText: {
+        marginTop: 16,
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#666',
+        textAlign: 'center',
+    },
+    contactButton: {
+        flexDirection: 'row',
+        backgroundColor: '#DD7800',
+        borderRadius: 30,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        shadowColor: '#DD7800',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    contactButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#fff',
     },
 });

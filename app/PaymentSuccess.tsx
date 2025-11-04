@@ -12,8 +12,7 @@ import {
 
 const PaymentSuccessScreen = () => {
     const handleContactAgents = () => {
-        // Navigate to Messages or Contact page
-        router.push('/Messages');
+        router.push('/(tabs)');
     };
 
     return (
@@ -37,7 +36,7 @@ const PaymentSuccessScreen = () => {
                         style={styles.contactButton}
                         onPress={handleContactAgents}
                     >
-                        <Text style={styles.contactButtonText}>Contact Agents</Text>
+                        <Text style={styles.contactButtonText}>Contact Partners</Text>
                     </TouchableOpacity>
                 </View>
             </View>

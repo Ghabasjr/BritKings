@@ -217,7 +217,6 @@ export default function PropertyDetailsScreen() {
 
   const handleConfirmUpdate = async () => {
     try {
-      // Get auth token and agent data
       const token = await AsyncStorage.getItem("authToken");
       const userDataString = await AsyncStorage.getItem("userData");
 
@@ -225,7 +224,6 @@ export default function PropertyDetailsScreen() {
         throw new Error("Authentication token not found. Please login again.");
       }
 
-      // Get agentId from user data
       let agentId = "";
       if (userDataString) {
         try {
@@ -349,8 +347,8 @@ export default function PropertyDetailsScreen() {
                       )}&layer=mapnik`;
                       return mapCoords
                         ? `${base}&marker=${encodeURIComponent(
-                            lat
-                          )},${encodeURIComponent(lon)}`
+                          lat
+                        )},${encodeURIComponent(lon)}`
                         : base;
                     })(),
                   }}
@@ -363,11 +361,11 @@ export default function PropertyDetailsScreen() {
                   initialRegion={
                     mapCoords
                       ? {
-                          latitude: mapCoords.latitude,
-                          longitude: mapCoords.longitude,
-                          latitudeDelta: 0.01,
-                          longitudeDelta: 0.01,
-                        }
+                        latitude: mapCoords.latitude,
+                        longitude: mapCoords.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                      }
                       : defaultRegion
                   }
                   scrollEnabled
@@ -462,7 +460,7 @@ export default function PropertyDetailsScreen() {
             {/* Conditional Button based on User Role */}
             {userRole === "Client" ? (
               <GradientButton
-                title={"Contact Agent"}
+                title={"Contact Partner"}
                 onPress={() => setShowContactModal(true)}
               />
             ) : (
@@ -525,7 +523,7 @@ export default function PropertyDetailsScreen() {
           <View style={contactModalStyles.bottomSheet}>
             <View style={contactModalStyles.handle} />
 
-            <Text style={contactModalStyles.title}>Contact Agent</Text>
+            <Text style={contactModalStyles.title}>Contact Partner</Text>
 
             <TouchableOpacity
               style={contactModalStyles.actionButton}
